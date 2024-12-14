@@ -293,42 +293,6 @@ class _$ExpenseDao extends ExpenseDao {
   }
 
   @override
-  Future<Expense?> getLastExpense() async {
-    return _queryAdapter.query(
-        'select * from expenses order by created_date desc limit 1',
-        mapper: (Map<String, Object?> row) => Expense(
-            id: row['id'] as int?,
-            value: row['value'] as double,
-            details: row['details'] as String?,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
-            generated: row['generated'] as int?));
-  }
-
-  @override
-  Future<List<ExpenseListView>> getListViewAfter(DateTime date) async {
-    return _queryAdapter.queryList(
-        'select * from vw_expense_list where created_date >= ?1 order by created_date',
-        mapper: (Map<String, Object?> row) => ExpenseListView(id: row['id'] as int, createdDate: _dateTimeTc.decode(row['created_date'] as String), value: row['value'] as double, details: row['details'] as String?, generated: row['generated'] as int?, firstTag: row['first_tag'] as String?, totalTags: row['total_tags'] as int),
-        arguments: [_dateTimeTc.encode(date)]);
-  }
-
-  @override
-  Future<void> deleteExpenseById(int eid) async {
-    await _queryAdapter
-        .queryNoReturn('delete from expenses where id=?1', arguments: [eid]);
-  }
-
-  @override
-  Future<void> deleteExpenseTagByIds(
-    int eid,
-    int tid,
-  ) async {
-    await _queryAdapter.queryNoReturn(
-        'delete from expense_tags where expense_id=?1 and tag_id=?2',
-        arguments: [eid, tid]);
-  }
-
-  @override
   Future<List<ExpenseMonthsView>> getMonths(int limit) async {
     return _queryAdapter.queryList('select * from vw_expense_months limit ?1',
         mapper: (Map<String, Object?> row) =>
