@@ -435,29 +435,6 @@ class _$TagDao extends TagDao {
   }
 
   @override
-  Future<int?> getAllTagsCount() async {
-    return _queryAdapter.query('select count(*) from tags',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<List<Tag>> getBatch(
-    int batchSize,
-    int lastId,
-  ) async {
-    return _queryAdapter.queryList(
-        'select * from tags t   where t.id > ?2   order by t.id   limit ?1',
-        mapper: (Map<String, Object?> row) => Tag(
-            id: row['id'] as int?,
-            name: row['name'] as String,
-            description: row['description'] as String?,
-            color: row['color'] as int?,
-            added: _dateTimeTc.decode(row['added_time'] as String),
-            deleted: (row['deleted'] as int) != 0),
-        arguments: [batchSize, lastId]);
-  }
-
-  @override
   Future<int?> getTagIdByName(String name) async {
     return _queryAdapter.query('select id from tags where name = ?1',
         mapper: (Map<String, Object?> row) => row.values.first as int,
@@ -532,35 +509,6 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   final UpdateAdapter<ScheduledExpense> _scheduledExpenseUpdateAdapter;
 
   @override
-  Future<int?> getAllScheduledExpenseCount() async {
-    return _queryAdapter.query('select count(*) from scheduled_expenses',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<int?> getAllScheduledExpenseTagCount() async {
-    return _queryAdapter.query('select count(*) from scheduled_expense_tags',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<List<ScheduledExpense>> getScheduledExpenseBatch(
-    int batchSize,
-    int lastId,
-  ) async {
-    return _queryAdapter.queryList(
-        'select * from scheduled_expenses where id>?2 order by id limit ?1',
-        mapper: (Map<String, Object?> row) => ScheduledExpense(
-            id: row['id'] as int?,
-            value: row['value'] as double,
-            details: row['details'] as String?,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
-            nextInsert: _dateTimeTc.decode(row['next_insert'] as String),
-            repeatPattern: row['repeat_pattern'] as String),
-        arguments: [batchSize, lastId]);
-  }
-
-  @override
   Stream<List<ScheduledExpense>> watchScheduledExpenses() {
     return _queryAdapter.queryListStream(
         'select * from scheduled_expenses order by id',
@@ -573,16 +521,6 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
             repeatPattern: row['repeat_pattern'] as String),
         queryableName: 'scheduled_expenses',
         isView: false);
-  }
-
-  @override
-  Future<List<ScheduledExpenseTag>> getScheduledExpenseTagsById(int id) async {
-    return _queryAdapter.queryList(
-        'select * from scheduled_expense_tags where scheduled_expense_id=?1',
-        mapper: (Map<String, Object?> row) => ScheduledExpenseTag(
-            tagId: row['tag_id'] as int?,
-            scheduledExpenseId: row['scheduled_expense_id'] as int?),
-        arguments: [id]);
   }
 
   @override
@@ -625,12 +563,6 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   Future<void> insertTags(List<ScheduledExpenseTag> tags) async {
     await _scheduledExpenseTagInsertionAdapter.insertList(
         tags, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> insertTagEntity(ScheduledExpenseTag t) async {
-    await _scheduledExpenseTagInsertionAdapter.insert(
-        t, OnConflictStrategy.abort);
   }
 
   @override
