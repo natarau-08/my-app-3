@@ -232,18 +232,6 @@ class _$ExpenseDao extends ExpenseDao {
                   'created_date': _dateTimeTc.encode(item.createdDate),
                   'generated': item.generated
                 }),
-        _tagInsertionAdapter = InsertionAdapter(
-            database,
-            'tags',
-            (Tag item) => <String, Object?>{
-                  'id': item.id,
-                  'name': item.name,
-                  'description': item.description,
-                  'color': item.color,
-                  'added_time': _dateTimeTc.encode(item.added),
-                  'deleted': item.deleted ? 1 : 0
-                },
-            changeListener),
         _expenseTagInsertionAdapter = InsertionAdapter(
             database,
             'expense_tags',
@@ -270,8 +258,6 @@ class _$ExpenseDao extends ExpenseDao {
   final QueryAdapter _queryAdapter;
 
   final InsertionAdapter<Expense> _expenseInsertionAdapter;
-
-  final InsertionAdapter<Tag> _tagInsertionAdapter;
 
   final InsertionAdapter<ExpenseTag> _expenseTagInsertionAdapter;
 
@@ -350,67 +336,15 @@ class _$ExpenseDao extends ExpenseDao {
   }
 
   @override
-  Future<int?> getExpenseCount() async {
-    return _queryAdapter.query('select count(*) from expenses',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<int?> getAllExpenseTagCount() async {
-    return _queryAdapter.query('select count(*) from expense_tags',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<List<Expense>> getExpenseBatch(
-    int batchSize,
-    int lastId,
-  ) async {
-    return _queryAdapter.queryList(
-        'select * from expenses where id > ?2 order by id limit ?1',
-        mapper: (Map<String, Object?> row) => Expense(
-            id: row['id'] as int?,
-            value: row['value'] as double,
-            details: row['details'] as String?,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
-            generated: row['generated'] as int?),
-        arguments: [batchSize, lastId]);
-  }
-
-  @override
-  Future<List<ExpenseTag>> getExpenseTagsByExpenseId(int id) async {
-    return _queryAdapter.queryList(
-        'select * from expense_tags where expense_id=?1',
-        mapper: (Map<String, Object?> row) => ExpenseTag(
-            tagId: row['tag_id'] as int?, expenseId: row['expense_id'] as int?),
-        arguments: [id]);
-  }
-
-  @override
   Future<int> insert(Expense e) {
     return _expenseInsertionAdapter.insertAndReturnId(
         e, OnConflictStrategy.abort);
   }
 
   @override
-  Future<void> batchInsertExpenses(List<Expense> rows) async {
-    await _expenseInsertionAdapter.insertList(rows, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> batchInsertTags(List<Tag> rows) async {
-    await _tagInsertionAdapter.insertList(rows, OnConflictStrategy.abort);
-  }
-
-  @override
   Future<void> batchInsertExpenseTags(List<ExpenseTag> rows) async {
     await _expenseTagInsertionAdapter.insertList(
         rows, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<void> insertExpenseTag(ExpenseTag e) async {
-    await _expenseTagInsertionAdapter.insert(e, OnConflictStrategy.abort);
   }
 
   @override

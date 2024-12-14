@@ -39,11 +39,6 @@ abstract class ScheduledExpenseDao {
     await insertTags(scht);
   }
 
-  Future<void> insertTag(int scheduledExpenseId, int tagId) => insertTagEntity(ScheduledExpenseTag(
-    scheduledExpenseId: scheduledExpenseId,
-    tagId: tagId
-  ));
-
   // creates an expense from a scheduled expense
   Future<void> saveExpenseFromScheduled(ScheduledExpense sch, DateTime date) async {
     // save expense
@@ -111,32 +106,8 @@ abstract class ScheduledExpenseDao {
     }
   }
 
-  @Query('select count(*) from scheduled_expenses')
-  Future<int?> getAllScheduledExpenseCount();
-
-  @Query('select count(*) from scheduled_expense_tags')
-  Future<int?> getAllScheduledExpenseTagCount();
-
-  @Query('select * from scheduled_expenses where id>:lastId order by id limit :batchSize')
-  Future<List<ScheduledExpense>> getScheduledExpenseBatch(int batchSize, int lastId);
-
-  Future<(List<ScheduledExpenseTag>, int)> getScheduledExpenseTagBatch(int batchSize, int lastId) async {
-    final qe = await getScheduledExpenseBatch(batchSize, lastId);
-    final newLastId = qe.lastOrNull?.id ?? lastId;
-
-    final data = <ScheduledExpenseTag>[];
-    for(final e in qe){
-      data.addAll(await getScheduledExpenseTagsById(e.id!));
-    }
-
-    return (data , newLastId);
-  }
-
   @Query('select * from scheduled_expenses order by id')
   Stream<List<ScheduledExpense>> watchScheduledExpenses();
-
-  @Query('select * from scheduled_expense_tags where scheduled_expense_id=:id')
-  Future<List<ScheduledExpenseTag>> getScheduledExpenseTagsById(int id);
 
   @Query('select * from scheduled_expenses where next_insert <= :t')
   Future<List<ScheduledExpense>> getScheduledExpensesWithNextInsertSmallerThan(DateTime t);
@@ -149,7 +120,4 @@ abstract class ScheduledExpenseDao {
 
   @Insert()
   Future<void> insertTags(List<ScheduledExpenseTag> tags);
-
-  @Insert()
-  Future<void> insertTagEntity(ScheduledExpenseTag t);
 }

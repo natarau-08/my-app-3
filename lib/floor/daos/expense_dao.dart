@@ -40,18 +40,8 @@ where et.expense_id = :id""")
     }
   }
 
-  // why would you do this? 
-  @Insert()
-  Future<void> batchInsertExpenses(List<Expense> rows);
-
-  @Insert()
-  Future<void> batchInsertTags(List<Tag> rows);
-
   @Insert()
   Future<void> batchInsertExpenseTags(List<ExpenseTag> rows);
-
-  @Insert()
-  Future<void> insertExpenseTag(ExpenseTag e);
 
   @Query('select * from vw_expense_months limit :limit')
   Future<List<ExpenseMonthsView>> getMonths(int limit);
@@ -76,29 +66,4 @@ where et.expense_id = :id""")
 
   @Query('select * from vw_expense_list where id=:id')
   Future<ExpenseListView?> getViewDataForExpenseId(int id);
-
-  @Query('select count(*) from expenses')
-  Future<int?> getExpenseCount();
-
-
-  @Query('select count(*) from expense_tags')
-  Future<int?> getAllExpenseTagCount();
-
-  @Query('select * from expenses where id > :lastId order by id limit :batchSize')
-  Future<List<Expense>> getExpenseBatch(int batchSize, int lastId);
-
-  @Query('select * from expense_tags where expense_id=:id')
-  Future<List<ExpenseTag>> getExpenseTagsByExpenseId(int id);
-
-  Future<(List<ExpenseTag>, int lastId)> getExpenseTagBatch(int batchSize, int lastId) async {
-    final expenses = await getExpenseBatch(batchSize, lastId);
-    final newLastId = expenses.lastOrNull?.id ?? lastId;
-
-    final ets = <ExpenseTag>[];
-    for(final e in expenses){
-      ets.addAll(await getExpenseTagsByExpenseId(e.id!));
-    }
-
-    return (ets, newLastId);
-  }
 }

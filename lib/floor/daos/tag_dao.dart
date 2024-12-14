@@ -28,15 +28,6 @@ abstract class TagDao {
   where et.tag_id = :id''')
   Future<int?> getTagExpenseCount(int id);
 
-  @Query('select count(*) from tags')
-  Future<int?> getAllTagsCount();
-
-  @Query('''select * from tags t
-  where t.id > :lastId
-  order by t.id
-  limit :batchSize''')
-  Future<List<Tag>> getBatch(int batchSize, int lastId);
-
   @Query('select id from tags where name = :name')
   Future<int?> getTagIdByName(String name);
 }
