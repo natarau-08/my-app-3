@@ -4,11 +4,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
+import 'package:my_app_3/floor/tables/expense.dart';
+import 'package:my_app_3/floor/views/expense_month_summary_view.dart';
 import 'package:my_app_3/pages/add_expense_page.dart';
 import 'package:my_app_3/pages/edit_expense_page.dart';
 
 import '../constants.dart';
-import '../database/database.dart';
+import '../floor/app_database.dart';
+import '../floor/views/expense_list_view.dart';
 import '../utils.dart';
 
 class ExpenseListPage extends StatefulWidget {
@@ -66,20 +69,18 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
         controller: _scrollController,
         itemCount: _data.length,
         itemBuilder: (context, index){
-          // final cs = Theme.of(context).colorScheme;
-          
           final item = _data[index];
           
-          if(item is ExpenseListViewData){
+          if(item is ExpenseListView){
             final String addLabel = item.generated == null ? 'Added' : 'Generated for';
             return ListTile(
               onTap: () async {
-                final expense = await AppDatabase.expensesDao.findExpenseById(item.id);
+                final expense = await AppDatabase.instance.expenseDao.findExpenseById(item.id);
                 if(context.mounted){
-                  final result = await Navigator.of(context).pushNamed(EditExpensePage.route, arguments: expense) as ExpenseData?;
+                  final result = await Navigator.of(context).pushNamed(EditExpensePage.route, arguments: expense) as Expense?;
                   
                   if(result != null) {
-                    final updatedData = await AppDatabase.expensesDao.getViewDataForExpenseId(result.id);
+                    final updatedData = await AppDatabase.instance.expenseDao.getViewDataForExpenseId(result.id!);
                     setState(() {
                       _data[index] = updatedData;
                     });
@@ -101,8 +102,8 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                       padding: const EdgeInsets.all(0),
                       label: Text(item.firstTag!)
                     ),
-                    if(item.totalTags != null && item.totalTags! > 1) Text(
-                      ' (+${item.totalTags! - 1})',
+                    if(item.totalTags > 1) Text(
+                      ' (+${item.totalTags - 1})',
                       style: const TextStyle(
                         fontSize: 14
                       ),
@@ -128,22 +129,22 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                 ],
               ),
             );
-          } else if(item is ExpenseMonthSummaryViewData){
+          } else if(item is ExpenseMonthSummaryView){
             return ListTile(
               // tileColor: const Color(0xfff2f2f2),
               tileColor: const Color(0xFF6AD0FF),
               title: Row(
                 children: [
-                  Expanded(child: Text('Total month: ${item.totalMonth ?? 0}')),
+                  Expanded(child: Text('Total month: ${item.totalMonth}')),
                   Text('${item.month}/${item.year}', style: const TextStyle(fontWeight: FontWeight.bold,),)
                 ],
               ),
               subtitle: Row(
                 children: [
                   const Text('Balance: '),
-                  Text('${((item.totalMonthGain ?? 0) * -1)}', style: const TextStyle(color: Constants.colorExpenseGainText),),
+                  Text('${((item.totalMonthGain) * -1)}', style: const TextStyle(color: Constants.colorExpenseGainText),),
                   const Text(' / '),
-                  Text((item.totalMonthLoss ?? 0).toString(), style: const TextStyle(color: Colors.red),),
+                  Text((item.totalMonthLoss).toString(), style: const TextStyle(color: Colors.red),),
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
@@ -164,13 +165,12 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     );
   }
 
-  // <editor-fold desc="Refresh Data" defaultstate="collapsed">
   void _refreshData() async {
     _data = [];
 
     await _subscription?.cancel();
 
-    _subscription = AppDatabase.expensesDao.streamExpensesAndSummaries(3).listen((data){
+    _subscription = AppDatabase.instance.expenseDao.streamExpensesAndSummaries(3).listen((data){
       _data.addAll(data);
     });
 
@@ -188,5 +188,4 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
       });
     });
   }
-  // </editor-fold>
 }

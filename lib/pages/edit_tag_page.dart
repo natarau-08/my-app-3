@@ -1,14 +1,14 @@
 
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/form_separator.dart';
 import 'package:my_app_3/controls/save_cancel_buttons.dart';
-import 'package:my_app_3/database/database.dart';
 import 'package:my_app_3/utils.dart';
 
 import '../constants.dart';
+import '../floor/app_database.dart';
+import '../floor/tables/tag.dart';
 
 class EditTagPage extends StatefulWidget {
   static const String route = '/tags/edit-tag';
@@ -27,7 +27,7 @@ class _EditTagPageState extends State<EditTagPage> {
   // color picker animation
   bool _showColorPicker = false;
 
-  TagData? _tag;
+  Tag? _tag;
   String? _title;
   Color _tagColor = Colors.transparent;
 
@@ -43,7 +43,7 @@ class _EditTagPageState extends State<EditTagPage> {
   @override
   Widget build(BuildContext context) {
     if(_title == null){
-      _tag = ModalRoute.of(context)?.settings.arguments as TagData?;
+      _tag = ModalRoute.of(context)?.settings.arguments as Tag?;
       _title = _tag == null ? 'Create new tag' : 'Edit tag "${_tag!.name}" #${_tag!.id}';
       if(_tag != null){
         _nameController.text = _tag!.name;
@@ -172,12 +172,8 @@ class _EditTagPageState extends State<EditTagPage> {
 
     _dbValidationError = null;
     if(_tag == null){
-      final e = await (
-        db.select(db.tag)
-          ..where((x) => x.name.equals(tagName))
-      ).getSingleOrNull() != null;
-
-      if(e){
+      final id = await db.tagDao.getTagIdByName(tagName);
+      if(id != null){
         _dbValidationError = 'There already exists a tag with this name.';
       }
     }
@@ -186,19 +182,19 @@ class _EditTagPageState extends State<EditTagPage> {
 
     // saving data
     try{
-      final c = TagCompanion(
-        id: _tag == null ? const drift.Value.absent() : drift.Value(_tag!.id),
-        name: drift.Value(tagName),
-        description: drift.Value(tagDesc.isEmpty ? null : tagDesc),
-        color: drift.Value(color),
-        added: _tag == null ? drift.Value(DateTime.now()) : drift.Value(_tag!.added),
-        deleted: const drift.Value(false)
+      final c = Tag(
+        id: _tag?.id,
+        name: tagName,
+        description: tagDesc.isEmpty ? null : tagDesc,
+        color: color,
+        added: _tag == null ? DateTime.now() : _tag!.added,
+        deleted: false
       );
 
       if(_tag != null){
-        await AppDatabase.tagsDao.updateTag(c);
+        await db.tagDao.update(c);
       }else{
-        await AppDatabase.tagsDao.insertTag(c);
+        await db.tagDao.insertTag(c);
       }
 
       Utils.infoMessage('$tagName tag saved.');

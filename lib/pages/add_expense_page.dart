@@ -1,14 +1,13 @@
 
-import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
-import 'package:my_app_3/database/database.dart';
 import 'package:my_app_3/forms/edit_expense_form.dart';
 import 'package:my_app_3/pages/edit_scheduled_expense_page.dart';
 import 'package:my_app_3/pages/expense_list_page.dart';
 import 'package:my_app_3/pages/scheduled_expenses_page.dart';
 
 import '../constants.dart';
+import '../floor/app_database.dart';
 
 class AddExpensePage extends StatelessWidget {
   static const String title = 'Add Expense';
@@ -41,15 +40,8 @@ class AddExpensePage extends StatelessWidget {
           padding: const EdgeInsets.all(Constants.pagePadding),
           child: EditExpenseForm(
               onSaving: (expenseData, tags) async {
-                final id = await AppDatabase.expensesDao.saveExpense(
-                    expenseData
-                        .toCompanion(true)
-                        .copyWith(
-                          id: const Value.absent()
-                        )
-                );
-
-                await AppDatabase.expensesDao.setTags(tags, id);
+                final id = await AppDatabase.instance.expenseDao.saveExpense(expenseData);
+                await AppDatabase.instance.expenseDao.setTags(tags, id);
               },
           ),
         ),

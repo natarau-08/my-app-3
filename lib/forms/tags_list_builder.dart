@@ -1,16 +1,16 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:my_app_3/database/database.dart';
 
 import '../controls/centered_widgets.dart';
+import '../floor/tables/tag.dart';
 import '../utils.dart';
 
 class TagsListBuilder extends StatelessWidget{
-  final Stream<List<TagData>> stream;
-  final void Function(BuildContext context, DismissDirection dir, TagData tag) onDismissed;
-  final void Function(BuildContext context, TagData tag) onItemTap;
-  final Future<bool> Function(BuildContext context, DismissDirection dir, TagData tag) onConfirmDismiss;
+  final Stream<List<Tag>> stream;
+  final void Function(BuildContext context, DismissDirection dir, Tag tag) onDismissed;
+  final void Function(BuildContext context, Tag tag) onItemTap;
+  final Future<bool> Function(BuildContext context, DismissDirection dir, Tag tag) onConfirmDismiss;
   final DismissDirection dismissDirection;
 
   const TagsListBuilder({

@@ -1,8 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:my_app_3/database/database.dart';
 import 'package:my_app_3/pages/settings_page.dart';
 import 'package:my_app_3/route_info.dart';
+
+import 'floor/app_database.dart';
 
 class AppMainPage extends StatelessWidget {
   final String title;
@@ -65,7 +66,7 @@ class AppMainPage extends StatelessWidget {
                 title: Text(ri.title!),
                 leading: ri.menuIcon,
                 onTap: () {
-                  AppDatabase.appSettingsDao.saveRouteAsLastRestoreRoute(ri.route);
+                  AppDatabase.instance.appSettingsDao.saveRouteAsLastRestoreRoute(ri.route);
                   Navigator.of(context).pushReplacementNamed(ri.route);
                 },
               )

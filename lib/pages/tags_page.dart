@@ -1,12 +1,12 @@
-
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
-import 'package:my_app_3/database/database.dart';
+import 'package:my_app_3/floor/tables/tag.dart';
 import 'package:my_app_3/forms/tags_list_builder.dart';
 import 'package:my_app_3/pages/deleted_tags_page.dart';
 import 'package:my_app_3/pages/edit_tag_page.dart';
 import 'package:my_app_3/utils.dart';
+
+import '../floor/app_database.dart';
 
 class TagsPage extends StatefulWidget {
   static const String title = 'Tags';
@@ -19,11 +19,11 @@ class TagsPage extends StatefulWidget {
 }
 
 class _TagsPageState extends State<TagsPage> {
-  late Stream<List<TagData>> _stream;
+  late Stream<List<Tag>> _stream;
 
   @override
   void initState() {
-    _stream = AppDatabase.tagsDao.watchAllTags(false);
+    _stream = AppDatabase.instance.tagDao.watchAllTags();
     super.initState();
   }
 
@@ -55,14 +55,10 @@ class _TagsPageState extends State<TagsPage> {
     );
   }
 
-  void _onDismissed(BuildContext context, _, TagData tag) async {
+  void _onDismissed(BuildContext context, _, Tag tag) async {
     try{
-        await AppDatabase.tagsDao.updateTagById(
-          tag.id,
-          const TagCompanion(
-            deleted: drift.Value(true)
-          )
-        );
+        tag.deleted = true;
+        await AppDatabase.instance.tagDao.update(tag);
 
         if(context.mounted){
           Utils.infoMessage('Tag "${tag.name}" moved to trash.');
@@ -77,7 +73,7 @@ class _TagsPageState extends State<TagsPage> {
     return;
   }
 
-  void _onItemTap(BuildContext context, TagData tag){
+  void _onItemTap(BuildContext context, Tag tag){
     Navigator.of(context).pushNamed(EditTagPage.route, arguments: tag);
   }
 }

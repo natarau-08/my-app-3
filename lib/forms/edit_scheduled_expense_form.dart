@@ -3,13 +3,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:my_app_3/database/database.dart';
 import 'package:my_app_3/forms/edit_expense_form.dart';
 import 'package:my_app_3/utils.dart';
 
+import '../floor/tables/expense.dart';
+import '../floor/tables/scheduled_expense.dart';
+import '../floor/tables/tag.dart';
+
 class EditScheduledExpenseForm extends StatefulWidget {
-  final ScheduledExpenseData? data;
-  final FutureOr<void> Function(ScheduledExpenseData data, List<TagData> tags) onSaving;
+  final ScheduledExpense? data;
+  final FutureOr<void> Function(ScheduledExpense data, List<Tag> tags) onSaving;
 
   const EditScheduledExpenseForm({
     super.key,
@@ -60,7 +63,7 @@ class _EditScheduledExpenseFormState extends State<EditScheduledExpenseForm> {
   @override
   Widget build(BuildContext context) {
     return EditExpenseForm(
-      expenseData: widget.data == null ? null : ExpenseData(
+      expenseData: widget.data == null ? null : Expense(
         id: widget.data!.id,
         value: widget.data!.value,
         createdDate: widget.data!.createdDate,
@@ -181,22 +184,19 @@ class _EditScheduledExpenseFormState extends State<EditScheduledExpenseForm> {
     });
   }
 
-  void _onSaving(ExpenseData ed, List<TagData> tags) {
+  void _onSaving(Expense ed, List<Tag> tags) {
     if(_rp == _RepPat.none){
       Utils.warningMessage('Please choose a repeat pattern.');
       return;
     }
 
-    final schData = ScheduledExpenseData(
+    final schData = ScheduledExpense(
         id: widget.data == null ? 0 : widget.data!.id,
         value: ed.value,
         createdDate: widget.data == null ? DateTime.now() : widget.data!.createdDate,
         details: ed.details ?? '<no_details>',
         nextInsert: _startDate,
-        repeatDaily: _rp == _RepPat.daily,
-        repeatWeekly: _rp == _RepPat.weekly,
-        repeatMonthly: _rp == _RepPat.monthly,
-        repeatYearly: _rp == _RepPat.yearly
+        repeatPattern: ScheduledExpense.buildRepeatPattern(_rp == _RepPat.daily, _rp == _RepPat.weekly, _rp == _RepPat.monthly, _rp == _RepPat.yearly)
     );
 
     widget.onSaving(schData, tags);

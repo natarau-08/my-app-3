@@ -7,7 +7,7 @@ import 'package:my_app_3/route_info.dart';
 
 import '../constants.dart';
 import '../controls/centered_widgets.dart';
-import '../database/database.dart';
+import '../floor/app_database.dart';
 
 class SettingsPage extends StatefulWidget {
   static const String title = 'Settings';
@@ -26,7 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void initState() {
-    _stream = AppDatabase.appSettingsDao.watchAllSettingsMap();
+    _stream = AppDatabase.instance.appSettingsDao.watchAllSettingsMap();
 
     _options = [
       const DropdownMenuEntry(
@@ -59,7 +59,6 @@ class _SettingsPageState extends State<SettingsPage> {
           icon: const Icon(Icons.info)
         )
       ],
-      // body: const Placeholder(),
       body: Padding(
         padding: const EdgeInsets.all(Constants.pagePadding),
         child: StreamBuilder(
@@ -79,7 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         Text('When I open the app', style: TextStyle(fontWeight: FontWeight.bold),)
                       ],
                     ),
-                    // const Divider(height: 1,),
+
                     Row(
                       children: [
                         Expanded(
@@ -92,7 +91,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ) ? null : RouteInfo.routeMenuList.firstWhere((x) => x.route == settingsMap[AppOpenBehavior.keyRoute]),
                             onSelected: (ri) {
                               if(ri == null) return;
-                              AppDatabase.appSettingsDao.saveRouteAsRestoreThisRoute(ri.route);
+                              AppDatabase.instance.appSettingsDao.saveRouteAsRestoreThisRoute(ri.route);
                             },
                           ),
                         )
@@ -103,26 +102,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
 
-                // Column(
-                //   children: [
-                //     const Row(
-                //       children: [
-                //         Text('Expense list appearance', style: TextStyle(fontWeight: FontWeight.bold),)
-                //       ],
-                //     ),
-
-                //     Row(
-                //       children: [
-                //         const Expanded(child: Text('Summary background color:')),
-                //         Expanded(
-                //           child: Container(
-                //             color: Colors.red,
-                //           ),
-                //         )
-                //       ],
-                //     )
-                //   ],
-                // ),
 
                 ListTile(
                   title: const Text(BackupAndRestorePage.title),

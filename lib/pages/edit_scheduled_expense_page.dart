@@ -1,11 +1,11 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:my_app_3/app_secondary_page.dart';
-import 'package:my_app_3/database/database.dart';
 import 'package:my_app_3/forms/edit_scheduled_expense_form.dart';
-import 'package:drift/drift.dart' as drift;
 
 import '../constants.dart';
+import '../floor/app_database.dart';
+import '../floor/tables/scheduled_expense.dart';
 import '../utils.dart';
 
 class EditScheduledExpensePage extends StatefulWidget {
@@ -21,12 +21,12 @@ class EditScheduledExpensePage extends StatefulWidget {
 }
 
 class _EditScheduledExpensePageState extends State<EditScheduledExpensePage> {
-  ScheduledExpenseData? _scheduledExpenseData;
+  ScheduledExpense? _scheduledExpenseData;
 
   @override
   Widget build(BuildContext context) {
 
-    _scheduledExpenseData = ModalRoute.of(context)!.settings.arguments as ScheduledExpenseData?;
+    _scheduledExpenseData = ModalRoute.of(context)!.settings.arguments as ScheduledExpense?;
 
     return AppSecondaryPage(
         title: _scheduledExpenseData == null ? 'Add scheduled expense' : 'Edit scheduled expense',
@@ -35,22 +35,11 @@ class _EditScheduledExpensePageState extends State<EditScheduledExpensePage> {
             padding: const EdgeInsets.all(Constants.pagePadding),
             child: EditScheduledExpenseForm(
               onSaving: (data, tags) async {
-                late ScheduledExpenseCompanion comp;
-
-                if(_scheduledExpenseData == null){
-                  comp = data.toCompanion(true).copyWith(id: const drift.Value.absent());
-                }else{
-                  comp = data.toCompanion(true);
-                }
-
                 try{
-                  await AppDatabase.instance.transaction(() async {
-                    int id = await AppDatabase.scheduledExpensesDao.saveScheduledExpense(comp);
-
-                    await AppDatabase.scheduledExpensesDao.setTags(tags, id);
-
-                    await AppDatabase.scheduledExpensesDao.generateExpenses();
-                  });
+                  // TODO: transaction
+                  int id = await AppDatabase.instance.scheduledExpenseDao.saveScheduledExpense(data);
+                  await AppDatabase.instance.scheduledExpenseDao.setTags(tags, id);
+                  await AppDatabase.instance.scheduledExpenseDao.generateExpenses();
 
                   Utils.successMessage('Scheduled expense saved!');
 

@@ -4,7 +4,8 @@ import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
 import 'package:my_app_3/pages/edit_scheduled_expense_page.dart';
 
-import '../database/database.dart';
+import '../floor/app_database.dart';
+import '../floor/tables/scheduled_expense.dart';
 
 class ScheduledExpensesPage extends StatefulWidget {
   static const route = '/expenses/scheduled';
@@ -18,12 +19,12 @@ class ScheduledExpensesPage extends StatefulWidget {
 
 class _ScheduledExpensesPageState extends State<ScheduledExpensesPage> {
 
-  late Stream<List<ScheduledExpenseData>> _stream;
+  late Stream<List<ScheduledExpense>> _stream;
 
 
   @override
   void initState() {
-    _stream = AppDatabase().scheduledExpenseDao.watchScheduledExpenses();
+    _stream = AppDatabase.instance.scheduledExpenseDao.watchScheduledExpenses();
     super.initState();
   }
 

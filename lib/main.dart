@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:my_app_3/database/database.dart';
 
+import 'floor/app_database.dart';
 import 'global_keys.dart';
 import 'route_info.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  AppDatabase.instance = AppDatabase();
+  await AppDatabase.initialize();
 
   // get route to be restored
-  final route = await AppDatabase.appSettingsDao.getRestoreRoute();
+  final route = await AppDatabase.instance.appSettingsDao.getRestoreRoute();
 
   AppDatabase.instance.scheduledExpenseDao.generateExpenses();
 

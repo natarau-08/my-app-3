@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 
 import '../controls/autocomplete_widget.dart';
 import '../controls/form_separator.dart';
-import '../database/database.dart';
+import '../floor/app_database.dart';
+import '../floor/tables/expense.dart';
+import '../floor/tables/tag.dart';
 import '../utils.dart';
 
 class EditExpenseForm extends StatefulWidget {
-  final FutureOr<void> Function(ExpenseData expenseData, List<TagData> tags) onSaving;
-  final ExpenseData? expenseData;
+  final FutureOr<void> Function(Expense expenseData, List<Tag> tags) onSaving;
+  final Expense? expenseData;
   final String? Function(String? str)? detailsValidator;
   final Widget? child;
 
@@ -34,8 +36,8 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
   TextEditingController? _tagsController;
   bool _keepTagsBetweenSaves = true;
 
-  final List<TagData> _tags = List.empty(growable: true);
-  late Future<List<TagData>> _acTags;
+  final List<Tag> _tags = List.empty(growable: true);
+  late Future<List<Tag>> _acTags;
 
   @override
   void initState() {
@@ -46,7 +48,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
         _detailsController.text = widget.expenseData!.details!;
       }
 
-      AppDatabase.expensesDao.getTagsForExpenseId(widget.expenseData!.id)
+      AppDatabase.instance.expenseDao.getTagsForExpenseId(widget.expenseData!.id!)
           .then((tdl){
         if(tdl.isNotEmpty){
           setState(() {
@@ -56,7 +58,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
       });
     }
 
-    _acTags = AppDatabase.tagsDao.getAllTags();
+    _acTags = AppDatabase.instance.tagDao.getAllTags();
 
     super.initState();
   }
@@ -200,7 +202,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
       final value = double.parse(_valueController.text.trim());
       final createdDate = widget.expenseData == null ? DateTime.now() : widget.expenseData!.createdDate;
 
-      final ed = ExpenseData(
+      final ed = Expense(
         id: widget.expenseData == null ? 0 : widget.expenseData!.id,
         value: value,
         createdDate: createdDate,
@@ -229,13 +231,13 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
     return null;
   }
 
-  void _onTagDeleting(TagData t){
+  void _onTagDeleting(Tag t){
     setState(() {
       _tags.remove(t);
     });
   }
 
-  void _onTagSelected(TagData tag){
+  void _onTagSelected(Tag tag){
     if(_tags.any((t) => t.id == tag.id)) {
       ScaffoldMessenger
           .of(context)
@@ -253,8 +255,8 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
 }
 
 class _ExpenseTagChip extends StatelessWidget {
-  final TagData tag;
-  final void Function(TagData tag)? onDeleted;
+  final Tag tag;
+  final void Function(Tag tag)? onDeleted;
 
   const _ExpenseTagChip(this.tag, {this.onDeleted});
 
