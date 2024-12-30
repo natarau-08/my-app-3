@@ -203,7 +203,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
       final createdDate = widget.expenseData == null ? DateTime.now() : widget.expenseData!.createdDate;
 
       final ed = Expense(
-        id: widget.expenseData == null ? 0 : widget.expenseData!.id,
+        id: widget.expenseData?.id,
         value: value,
         createdDate: createdDate,
         details: details,

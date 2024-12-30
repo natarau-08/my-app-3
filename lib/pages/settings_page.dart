@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/app_settings_keys.dart';
+import 'package:my_app_3/controls/form_separator.dart';
 import 'package:my_app_3/pages/backup_and_restore_page.dart';
 import 'package:my_app_3/route_info.dart';
 
@@ -102,15 +103,33 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
 
-
+                FormSeparator(),
                 ListTile(
                   title: const Text(BackupAndRestorePage.title),
                   onTap: () {
                     Navigator.of(context).pushNamed(BackupAndRestorePage.route);
                   },
+                ),
+
+                Divider(height: 1,),
+
+                ListTile(
+                  title: const Text('Theme'),
+                  trailing: DropdownMenu<String>(
+                    enableFilter: false,
+                    enableSearch: false,
+                    initialSelection: settingsMap[DarkModeSettings.key] ?? DarkModeSettings.platform,
+                    dropdownMenuEntries: [
+                      DropdownMenuEntry(value: DarkModeSettings.darkMode, label: 'Dark', trailingIcon: Icon(Icons.dark_mode)),
+                      DropdownMenuEntry(value: DarkModeSettings.lightMode, label: 'Light', trailingIcon: Icon(Icons.light_mode)),
+                      DropdownMenuEntry(value: DarkModeSettings.platform, label: 'System', trailingIcon: Icon(Icons.computer)),
+                    ],
+                    onSelected: (value) async {
+                      await AppDatabase.instance.appSettingsDao.setValue(DarkModeSettings.key, value ?? DarkModeSettings.platform);
+                    },
+                  ),
                 )
               ],
-
             );
           }
         ),

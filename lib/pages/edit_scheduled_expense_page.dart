@@ -36,9 +36,7 @@ class _EditScheduledExpensePageState extends State<EditScheduledExpensePage> {
             child: EditScheduledExpenseForm(
               onSaving: (data, tags) async {
                 try{
-                  // TODO: transaction
-                  int id = await AppDatabase.instance.scheduledExpenseDao.saveScheduledExpense(data);
-                  await AppDatabase.instance.scheduledExpenseDao.setTags(tags, id);
+                  await AppDatabase.instance.scheduledExpenseDao.saveScheduledExpense(data, tags);
                   await AppDatabase.instance.scheduledExpenseDao.generateExpenses();
 
                   Utils.successMessage('Scheduled expense saved!');

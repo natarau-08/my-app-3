@@ -191,7 +191,7 @@ class _EditScheduledExpenseFormState extends State<EditScheduledExpenseForm> {
     }
 
     final schData = ScheduledExpense(
-        id: widget.data == null ? 0 : widget.data!.id,
+        id: widget.data?.id,
         value: ed.value,
         createdDate: widget.data == null ? DateTime.now() : widget.data!.createdDate,
         details: ed.details ?? '<no_details>',

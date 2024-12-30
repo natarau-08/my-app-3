@@ -34,9 +34,9 @@ class EditExpensePage extends StatelessWidget {
           expenseData: expense,
           onSaving: (expenseData, tags) async {
             await AppDatabase.instance.expenseDao.saveExpense(expenseData);
-            await AppDatabase.instance.expenseDao.setTags(tags, expenseData.id!);
+            await AppDatabase.instance.expenseDao.setExpenseTags(tags, expenseData.id!);
             if(context.mounted){
-              Navigator.of(context).pop();
+              Navigator.of(context).pop(expenseData);
             }
           },
         ),

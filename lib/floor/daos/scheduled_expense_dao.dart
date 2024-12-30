@@ -17,22 +17,21 @@ abstract class ScheduledExpenseDao {
   @Update()
   Future<void> update(ScheduledExpense e);
 
-  Future<int> saveScheduledExpense(ScheduledExpense e) async {
-    if(e.id == null){
-      return await insert(e);
+  @transaction
+  Future<void> saveScheduledExpense(ScheduledExpense data, List<Tag> tags) async {
+    late int id;
+    if(data.id == null){
+      id = await insert(data);
     }else{
-      await update(e);
-      return e.id!;
+      id = data.id!;
+      await deleteTagsById(id);
+      await update(data);
     }
-  }
-
-  Future<void> setTags(List<Tag> tags, int eid) async {
-    await deleteTagsById(eid);
     
     final scht = tags
       .map((t)=>ScheduledExpenseTag(
         tagId: t.id!,
-        scheduledExpenseId: eid
+        scheduledExpenseId: id
       ))
       .toList();
 
@@ -51,7 +50,7 @@ abstract class ScheduledExpenseDao {
 
     // save tags
     final tags = await getTagsOfScheduledExpense(sch.id!);
-    await AppDatabase.instance.expenseDao.setTags(tags, eid);
+    await AppDatabase.instance.expenseDao.setExpenseTags(tags, eid);
   }
 
   Future<void> generateExpenses() async {
@@ -97,7 +96,7 @@ abstract class ScheduledExpenseDao {
       }
 
       data.nextInsert = next;
-      await saveScheduledExpense(data);
+      await update(data);
     }
 
     if(c > 0){
@@ -115,7 +114,7 @@ abstract class ScheduledExpenseDao {
   @Query('select t.* from scheduled_expense_tags st join tags t on t.id = st.tag_id where st.scheduled_expense_id=:id')
   Future<List<Tag>> getTagsOfScheduledExpense(int id);
 
-  @Query('delete from scheduled_expense_tag where scheduled_expense_id=:id')
+  @Query('delete from scheduled_expense_tags where scheduled_expense_id=:id')
   Future<void> deleteTagsById(int id);
 
   @Insert()

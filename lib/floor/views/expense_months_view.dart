@@ -3,11 +3,11 @@ import 'package:floor/floor.dart';
 
 @DatabaseView(
   '''select distinct
-  strftime('%Y', e.created_date) as year,
-  strftime('%M', e.created_date) as month
+  CAST(strftime('%Y', e.created_date) as INTEGER) as year,
+  CAST(strftime('%m', e.created_date) as INTEGER) as month
 from expenses e
 order by year, month''',
-  viewName: 'vw_expense_months_view'
+  viewName: 'vw_expense_months'
 )
 class ExpenseMonthsView {
   @ColumnInfo()

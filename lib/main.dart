@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app_3/app_settings_keys.dart';
 
 import 'floor/app_database.dart';
 import 'global_keys.dart';
@@ -10,20 +11,23 @@ void main() async {
 
   // get route to be restored
   final route = await AppDatabase.instance.appSettingsDao.getRestoreRoute();
+  final brightness = await DarkModeSettings.getBrightness();
 
   AppDatabase.instance.scheduledExpenseDao.generateExpenses();
 
-  runApp(MainApp(initialRoute: route));
+  runApp(MainApp(initialRoute: route, brightness: brightness,));
 }
 
 class MainApp extends StatelessWidget {
   final String initialRoute;
+  final Brightness brightness;
 
-  const MainApp({super.key, required this.initialRoute});
+  const MainApp({super.key, required this.initialRoute, required this.brightness});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
     return MaterialApp(
       scaffoldMessengerKey: GlobalKeys.scaffoldMessengerKey,
       navigatorKey: GlobalKeys.navigatorKey,
@@ -34,6 +38,7 @@ class MainApp extends StatelessWidget {
       initialRoute: initialRoute,
 
       theme: ThemeData(
+        brightness: brightness,
         inputDecorationTheme: const InputDecorationTheme(
           isDense: true,
           contentPadding: EdgeInsets.only(bottom: 8, top: 2)
@@ -44,7 +49,6 @@ class MainApp extends StatelessWidget {
           titleTextStyle: TextStyle(
             color: cs.onPrimary,
             fontSize: 20,
-            // fontWeight: FontWeight.bold
           ),
           iconTheme: IconThemeData(
             color: cs.onPrimary

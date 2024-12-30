@@ -6,13 +6,13 @@ import 'package:floor/floor.dart';
 select
   ex.year,
   ex.month,
-  SUM(ex.value) as total_month,
-  SUM(case when ex.value > 0 then ex.value else 0 end) as total_month_gain,
-  SUM(case when ex.value < 0 then ex.value else 0 end) as total_month_loss
+  CAST(SUM(ex.value) AS REAL) as total_month,
+  CAST(SUM(case when ex.value > 0 then ex.value else 0 end) AS REAL) as total_month_gain,
+  CAST(SUM(case when ex.value < 0 then ex.value else 0 end) AS REAL) as total_month_loss
 from (
   select
-    strftime('%Y', e.created_date) as year,
-    strftime('%M', e.created_date) as month,
+    cast(strftime('%Y', e.created_date) as integer) as year,
+    cast(strftime('%m', e.created_date) as integer) as month,
     e.value
   from expenses e
 ) ex

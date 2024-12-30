@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/forms/edit_expense_form.dart';
@@ -39,9 +38,8 @@ class AddExpensePage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(Constants.pagePadding),
           child: EditExpenseForm(
-              onSaving: (expenseData, tags) async {
-                final id = await AppDatabase.instance.expenseDao.saveExpense(expenseData);
-                await AppDatabase.instance.expenseDao.setTags(tags, id);
+              onSaving: (expense, tags) async {
+                await AppDatabase.instance.expenseDao.saveExpenseWithTags(expense, tags);
               },
           ),
         ),

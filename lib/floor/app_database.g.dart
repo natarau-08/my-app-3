@@ -80,6 +80,8 @@ class _$AppDatabase extends AppDatabase {
 
   ScheduledExpenseDao? _scheduledExpenseDaoInstance;
 
+  BackupAndRestoreDao? _backupAndRestoreDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -124,11 +126,11 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE INDEX `index_scheduled_expense_tags_scheduled_expense_id` ON `scheduled_expense_tags` (`scheduled_expense_id`)');
         await database.execute(
-            'CREATE VIEW IF NOT EXISTS `vw_expense_list` AS select\n  e.id,\n  e.created_date,\n  e.value,\n  e.details,\n  e.generated,\n\n  count(et.tag_id) as total_tags,\n  min(t.name) as first_tag\nfrom expenses e\njoin expense_tags et on et.expense_id = e.id\njoin tags t on t.id = et.tag_id\ngroup by e.id, e.created_date, e.value, e.details, e.generated\norder by e.created_date\n');
+            'CREATE VIEW IF NOT EXISTS `vw_expense_list` AS select\n  e.id,\n  e.created_date,\n  e.value,\n  e.details,\n  e.generated,\n\n  count(et.tag_id) as total_tags,\n  min(t.name) as first_tag,\n\n  CAST(strftime(\'%Y\', created_date) as INTEGER) as year,\n  CAST(strftime(\'%m\', created_date) as INTEGER) as month\nfrom expenses e\nleft join expense_tags et on et.expense_id = e.id\nleft join tags t on t.id = et.tag_id\ngroup by e.id, e.created_date, e.value, e.details, e.generated\norder by e.created_date\n');
         await database.execute(
-            'CREATE VIEW IF NOT EXISTS `vw_expense_months_view` AS select distinct\n  strftime(\'%Y\', e.created_date) as year,\n  strftime(\'%M\', e.created_date) as month\nfrom expenses e\norder by year, month');
+            'CREATE VIEW IF NOT EXISTS `vw_expense_months` AS select distinct\n  CAST(strftime(\'%Y\', e.created_date) as INTEGER) as year,\n  CAST(strftime(\'%m\', e.created_date) as INTEGER) as month\nfrom expenses e\norder by year, month');
         await database.execute(
-            'CREATE VIEW IF NOT EXISTS `vw_expense_summary` AS select\n  ex.year,\n  ex.month,\n  SUM(ex.value) as total_month,\n  SUM(case when ex.value > 0 then ex.value else 0 end) as total_month_gain,\n  SUM(case when ex.value < 0 then ex.value else 0 end) as total_month_loss\nfrom (\n  select\n    strftime(\'%Y\', e.created_date) as year,\n    strftime(\'%M\', e.created_date) as month,\n    e.value\n  from expenses e\n) ex\ngroup by ex.year, ex.month\n');
+            'CREATE VIEW IF NOT EXISTS `vw_expense_summary` AS select\n  ex.year,\n  ex.month,\n  CAST(SUM(ex.value) AS REAL) as total_month,\n  CAST(SUM(case when ex.value > 0 then ex.value else 0 end) AS REAL) as total_month_gain,\n  CAST(SUM(case when ex.value < 0 then ex.value else 0 end) AS REAL) as total_month_loss\nfrom (\n  select\n    cast(strftime(\'%Y\', e.created_date) as integer) as year,\n    cast(strftime(\'%m\', e.created_date) as integer) as month,\n    e.value\n  from expenses e\n) ex\ngroup by ex.year, ex.month\n');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -156,6 +158,12 @@ class _$AppDatabase extends AppDatabase {
   ScheduledExpenseDao get scheduledExpenseDao {
     return _scheduledExpenseDaoInstance ??=
         _$ScheduledExpenseDao(database, changeListener);
+  }
+
+  @override
+  BackupAndRestoreDao get backupAndRestoreDao {
+    return _backupAndRestoreDaoInstance ??=
+        _$BackupAndRestoreDao(database, changeListener);
   }
 }
 
@@ -272,46 +280,59 @@ class _$ExpenseDao extends ExpenseDao {
   }
 
   @override
-  Future<void> deleteAllTagsForExpenseId(int id) async {
-    await _queryAdapter.queryNoReturn(
-        'delete from expense_tags where expense_id = ?1',
-        arguments: [id]);
+  Future<int?> deleteExpenseTagForExpenseId(int eid) async {
+    return _queryAdapter.query('delete from expense_tags where expense_id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [eid]);
   }
 
   @override
   Future<List<ExpenseMonthsView>> getMonths(int limit) async {
-    return _queryAdapter.queryList('select * from vw_expense_months limit ?1',
-        mapper: (Map<String, Object?> row) =>
-            ExpenseMonthsView(row['year'] as int, row['month'] as int),
+    return _queryAdapter.queryList(
+        'select * from vw_expense_months order by year desc, month desc limit ?1',
+        mapper: (Map<String, Object?> row) => ExpenseMonthsView(row['year'] as int, row['month'] as int),
         arguments: [limit]);
   }
 
   @override
-  Future<List<Expense>> getExpensesByYearAndMonth(
+  Future<List<ExpenseListView>> getExpensesByYearAndMonth(
     int year,
     int month,
   ) async {
     return _queryAdapter.queryList(
-        'select * from vw_expense_list where strftime(\'%Y\', created_date)=?1 and strftime(\'%M\', created_date)=?2',
-        mapper: (Map<String, Object?> row) => Expense(id: row['id'] as int?, value: row['value'] as double, details: row['details'] as String?, createdDate: _dateTimeTc.decode(row['created_date'] as String), generated: row['generated'] as int?),
+        'select * from vw_expense_list where year=?1 and month=?2',
+        mapper: (Map<String, Object?> row) => ExpenseListView(
+            id: row['id'] as int,
+            createdDate: _dateTimeTc.decode(row['created_date'] as String),
+            value: row['value'] as double,
+            details: row['details'] as String?,
+            generated: row['generated'] as int?,
+            firstTag: row['first_tag'] as String?,
+            totalTags: row['total_tags'] as int,
+            year: row['year'] as int,
+            month: row['month'] as int),
         arguments: [year, month]);
   }
 
   @override
-  Future<ExpenseMonthsView?> getMonthSummary(
+  Future<ExpenseMonthSummaryView?> getMonthSummary(
     int year,
     int month,
   ) async {
     return _queryAdapter.query(
         'select * from vw_expense_summary where year=?1 and month=?2',
-        mapper: (Map<String, Object?> row) =>
-            ExpenseMonthsView(row['year'] as int, row['month'] as int),
+        mapper: (Map<String, Object?> row) => ExpenseMonthSummaryView(
+            year: row['year'] as int,
+            month: row['month'] as int,
+            totalMonth: row['total_month'] as double,
+            totalMonthGain: row['total_month_gain'] as double,
+            totalMonthLoss: row['total_month_loss'] as double),
         arguments: [year, month]);
   }
 
   @override
   Future<Expense?> findExpenseById(int id) async {
-    return _queryAdapter.query('select * from expense where id=?1',
+    return _queryAdapter.query('select * from expenses where id=?1',
         mapper: (Map<String, Object?> row) => Expense(
             id: row['id'] as int?,
             value: row['value'] as double,
@@ -331,7 +352,9 @@ class _$ExpenseDao extends ExpenseDao {
             details: row['details'] as String?,
             generated: row['generated'] as int?,
             firstTag: row['first_tag'] as String?,
-            totalTags: row['total_tags'] as int),
+            totalTags: row['total_tags'] as int,
+            year: row['year'] as int,
+            month: row['month'] as int),
         arguments: [id]);
   }
 
@@ -339,6 +362,12 @@ class _$ExpenseDao extends ExpenseDao {
   Future<int> insert(Expense e) {
     return _expenseInsertionAdapter.insertAndReturnId(
         e, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> insertExpenseTagList(List<ExpenseTag> data) async {
+    await _expenseTagInsertionAdapter.insertList(
+        data, OnConflictStrategy.abort);
   }
 
   @override
@@ -350,6 +379,40 @@ class _$ExpenseDao extends ExpenseDao {
   @override
   Future<void> update(Expense e) async {
     await _expenseUpdateAdapter.update(e, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> setExpenseTags(
+    List<Tag> tags,
+    int expenseId,
+  ) async {
+    if (database is sqflite.Transaction) {
+      await super.setExpenseTags(tags, expenseId);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.expenseDao.setExpenseTags(tags, expenseId);
+      });
+    }
+  }
+
+  @override
+  Future<void> saveExpenseWithTags(
+    Expense e,
+    List<Tag> tags,
+  ) async {
+    if (database is sqflite.Transaction) {
+      await super.saveExpenseWithTags(e, tags);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.expenseDao.saveExpenseWithTags(e, tags);
+      });
+    }
   }
 }
 
@@ -549,7 +612,7 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   @override
   Future<void> deleteTagsById(int id) async {
     await _queryAdapter.queryNoReturn(
-        'delete from scheduled_expense_tag where scheduled_expense_id=?1',
+        'delete from scheduled_expense_tags where scheduled_expense_id=?1',
         arguments: [id]);
   }
 
@@ -568,6 +631,67 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   @override
   Future<void> update(ScheduledExpense e) async {
     await _scheduledExpenseUpdateAdapter.update(e, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> saveScheduledExpense(
+    ScheduledExpense data,
+    List<Tag> tags,
+  ) async {
+    if (database is sqflite.Transaction) {
+      await super.saveScheduledExpense(data, tags);
+    } else {
+      await (database as sqflite.Database)
+          .transaction<void>((transaction) async {
+        final transactionDatabase = _$AppDatabase(changeListener)
+          ..database = transaction;
+        await transactionDatabase.scheduledExpenseDao
+            .saveScheduledExpense(data, tags);
+      });
+    }
+  }
+}
+
+class _$BackupAndRestoreDao extends BackupAndRestoreDao {
+  _$BackupAndRestoreDao(
+    this.database,
+    this.changeListener,
+  ) : _queryAdapter = QueryAdapter(database);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  @override
+  Future<int?> mTagsCount() async {
+    return _queryAdapter.query('select count(*) from tags',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<int?> mExpensesCount() async {
+    return _queryAdapter.query('select count(*) from expenses',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<int?> mExpenseTagsCount() async {
+    return _queryAdapter.query('select count(*) from expense_tags',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<int?> mScheduledExpensesCount() async {
+    return _queryAdapter.query('select count(*) from scheduled_expenses',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<int?> mScheduledExpenseTagsCount() async {
+    return _queryAdapter.query('select count(*) from scheduled_expense_tags',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
   }
 }
 

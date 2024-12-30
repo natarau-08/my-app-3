@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:floor/floor.dart';
 import 'package:my_app_3/floor/daos/app_settings_dao.dart';
+import 'package:my_app_3/floor/daos/backup_and_restore_dao.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart' as sqflite;
 
@@ -48,10 +49,7 @@ abstract class AppDatabase extends FloorDatabase {
   ExpenseDao get expenseDao;
   TagDao get tagDao;
   ScheduledExpenseDao get scheduledExpenseDao;
-
-  static Future<dynamic> runInTransaction(Future<dynamic> Function(sqflite.Transaction) action) async {
-    return await instance.database.database.transaction(action);
-  }
+  BackupAndRestoreDao get backupAndRestoreDao;
 
   static Future<void> initialize() async {
     String dbName = dbFileName;

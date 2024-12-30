@@ -9,7 +9,6 @@ import 'package:my_app_3/floor/views/expense_month_summary_view.dart';
 import 'package:my_app_3/pages/add_expense_page.dart';
 import 'package:my_app_3/pages/edit_expense_page.dart';
 
-import '../constants.dart';
 import '../floor/app_database.dart';
 import '../floor/views/expense_list_view.dart';
 import '../utils.dart';
@@ -54,6 +53,9 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final cs = Theme.of(context).colorScheme;
+
     return AppMainPage(
       title: ExpenseListPage.title,
       
@@ -72,7 +74,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
           final item = _data[index];
           
           if(item is ExpenseListView){
-            final String addLabel = item.generated == null ? 'Added' : 'Generated for';
+            final String addLabel = item.generated == null ? 'Added' : 'Generated';
             return ListTile(
               onTap: () async {
                 final expense = await AppDatabase.instance.expenseDao.findExpenseById(item.id);
@@ -87,15 +89,10 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                   }
                 }
               },
-              tileColor: index % 2 == 0 ? const Color(0xFFD5FFFD) : const Color.fromARGB(255, 222, 202, 255),
+              tileColor: index % 2 == 0 ? cs.surface : cs.inversePrimary,
               title: Wrap(
                 children: [
-                  Text(
-                    item.value.toString(),
-                    style: TextStyle(
-                      color: item.value <= 0 ? Constants.colorExpenseGainText : Colors.red
-                    ),
-                  ),
+                  Text(item.value.toString(),),
                   if(item.firstTag != null) ...[
                     const SizedBox(width: 10,),
                     Chip(
@@ -122,7 +119,6 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                       style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: item.generated == null ? Colors.black45 : Colors.brown,
                       ),
                     ),
                   )
@@ -131,24 +127,20 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
             );
           } else if(item is ExpenseMonthSummaryView){
             return ListTile(
-              // tileColor: const Color(0xfff2f2f2),
-              tileColor: const Color(0xFF6AD0FF),
+              tileColor: cs.secondary,
               title: Row(
                 children: [
-                  Expanded(child: Text('Total month: ${item.totalMonth}')),
-                  Text('${item.month}/${item.year}', style: const TextStyle(fontWeight: FontWeight.bold,),)
+                  Expanded(child: Text('Total month: ${item.totalMonth}', style: TextStyle(color: cs.onSecondary),)),
+                  Text('${item.month}/${item.year}', style: TextStyle(fontWeight: FontWeight.bold, color: cs.onSecondary),)
                 ],
               ),
               subtitle: Row(
                 children: [
-                  const Text('Balance: '),
-                  Text('${((item.totalMonthGain) * -1)}', style: const TextStyle(color: Constants.colorExpenseGainText),),
-                  const Text(' / '),
-                  Text((item.totalMonthLoss).toString(), style: const TextStyle(color: Colors.red),),
+                  Text('Balance: ${item.totalMonthGain} / ${item.totalMonthLoss}', style: TextStyle(color: cs.onSecondary),),
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text('${_data.length} expenses')
+                      child: Text('${_data.length} expenses', style: TextStyle(color: cs.onSecondary),)
                     ),
                   )
                 ],
@@ -183,7 +175,6 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
               duration: Duration(milliseconds: 3 * _data.length),
               curve: Curves.easeInOut
           );
-          // _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
         });
       });
     });

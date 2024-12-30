@@ -22,6 +22,7 @@ abstract class AppSettingsDao {
       await insert(e);
     }
     else{
+      e.value = value;
       await update(e);
     }
   }

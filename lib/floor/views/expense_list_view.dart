@@ -11,10 +11,13 @@ select
   e.generated,
 
   count(et.tag_id) as total_tags,
-  min(t.name) as first_tag
+  min(t.name) as first_tag,
+
+  CAST(strftime('%Y', created_date) as INTEGER) as year,
+  CAST(strftime('%m', created_date) as INTEGER) as month
 from expenses e
-join expense_tags et on et.expense_id = e.id
-join tags t on t.id = et.tag_id
+left join expense_tags et on et.expense_id = e.id
+left join tags t on t.id = et.tag_id
 group by e.id, e.created_date, e.value, e.details, e.generated
 order by e.created_date
 ''',
@@ -42,6 +45,12 @@ class ExpenseListView {
   @ColumnInfo(name: 'total_tags')
   final int totalTags;
 
+  @ColumnInfo(name: 'year')
+  final int year;
+
+  @ColumnInfo(name: 'month')
+  final int month;
+
   ExpenseListView({
     required this.id,
     required this.createdDate,
@@ -49,6 +58,8 @@ class ExpenseListView {
     required this.details,
     required this.generated,
     required this.firstTag,
-    required this.totalTags
+    required this.totalTags,
+    required this.year,
+    required this.month,
   });
 }
