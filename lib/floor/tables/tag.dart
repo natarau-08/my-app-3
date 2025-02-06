@@ -1,5 +1,6 @@
 
 import 'package:floor/floor.dart';
+import 'package:flutter/material.dart';
 
 @Entity(
   tableName: 'tags',
@@ -18,7 +19,7 @@ class Tag {
   String? description;
 
   @ColumnInfo(name: 'color')
-  int? color;
+  Color? color;
 
   @ColumnInfo(name: 'added_time')
   DateTime added;

@@ -19,6 +19,7 @@ dependencies:
   floor: ^1.5.0
   sqflite: ^2.4.0
   rxdart: ^0.28.0
+  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:

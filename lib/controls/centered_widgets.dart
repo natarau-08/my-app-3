@@ -77,6 +77,24 @@ class SimpleErrorIndicator extends StatelessWidget {
   }
 }
 
+class SimpleInfoIndicator extends StatelessWidget {
+  final String text;
+
+  const SimpleInfoIndicator(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleCenteredWidget(
+      text: text,
+      child: Icon(
+        Icons.info,
+        color: Theme.of(context).colorScheme.primary,
+        size: 40,
+      ),
+    );
+  }
+}
+
 class NoDataAvailableCenteredWidget extends StatelessWidget {
   const NoDataAvailableCenteredWidget({super.key});
 

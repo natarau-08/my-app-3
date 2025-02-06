@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
+import 'package:my_app_3/controls/centered_widgets.dart';
 
 class HomePage extends StatelessWidget {
   static const String route = '/';
@@ -12,7 +13,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppMainPage(
       title: title,
-      body: Placeholder(child: Text(title),),
+      body: SimpleInfoIndicator('This page is not implemented.'),
     );
   }
 }

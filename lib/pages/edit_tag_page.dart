@@ -50,7 +50,7 @@ class _EditTagPageState extends State<EditTagPage> {
         if(_tag!.description != null) _descController.text = _tag!.description!;
         if(_tag!.color != null) {
           _showColorPicker = true;
-          _tagColor = Color(_tag!.color!);
+          _tagColor = _tag!.color!;
         }
       }
     }
@@ -168,7 +168,7 @@ class _EditTagPageState extends State<EditTagPage> {
     final AppDatabase db = AppDatabase.instance;
     final String tagName = _nameController.text.trim();
     final String tagDesc = _descController.text.trim();
-    int? color = _showColorPicker ? _tagColor.value : null;
+    Color? color = _showColorPicker ? _tagColor : null;
 
     _dbValidationError = null;
     if(_tag == null){

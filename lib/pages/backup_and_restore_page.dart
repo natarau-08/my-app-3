@@ -1,16 +1,12 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'package:intl/intl.dart';
 import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
 import 'package:my_app_3/pages/settings_page.dart';
 import 'package:my_app_3/utils.dart';
-import 'package:path/path.dart';
 
 import '../floor/app_database.dart';
 import '../floor/tables/expense.dart';
@@ -65,111 +61,11 @@ class _BackupAndRestorePageState extends State<BackupAndRestorePage> {
             const SizedBox(
               height: 8,
             ),
-            ElevatedButton(
-                onPressed: () => _importFromFile(context),
-                child: const Text('Import from gzip file')),
-            const SizedBox(
-              height: 8,
-            ),
-            ElevatedButton(
-                onPressed: () => _exportToFile(context),
-                child: const Text('Export to gzip file'))
           ] else ...[
             const CircularProgressIndicator(),
             Text('${_message ?? 'Processing'}...'),
           ],
         ]));
-  }
-
-  void _exportToFile(BuildContext context) async {
-    setState(() {
-      _status = _Status.processing;
-      _message = 'Exporting data to file...';
-    });
-
-    try {
-      // get export file path
-      final exportFilePath = await _getExportFilePath();
-
-      if (exportFilePath == null) {
-        setState(() {
-          _status = _Status.idle;
-        });
-        return;
-      }
-
-      final exportFile = File(exportFilePath);
-      final outputStream = exportFile.openWrite();
-
-      // encode data then gzip it
-      final byteDataStream =
-          AppDatabase.instance.backupAndRestoreDao.streamData()
-          .transform(utf8.encoder)
-          .transform(gzip.encoder);
-
-      await byteDataStream.pipe(outputStream);
-
-      await outputStream.close();
-
-      setState(() {
-        _status = _Status.doneProcessing;
-        _message = 'File exported successfully!';
-      });
-    } catch (ex) {
-      setState(() {
-        _status = _Status.error;
-        _message = ex.toString();
-      });
-    }
-  }
-
-  Future<String?> _getExportFilePath() async {
-    String? finalPath;
-    final exportFileName = '${_getExportFileName()}.gzip';
-    if (Platform.isAndroid) {
-      finalPath = await FlutterFileDialog.saveFile(
-          params: SaveFileDialogParams(fileName: exportFileName));
-    } else {
-      finalPath = File(Platform.resolvedExecutable).parent.path;
-      finalPath = join(finalPath, exportFileName);
-    }
-    return finalPath;
-  }
-
-  void _importFromFile(BuildContext context) async {
-    setState(() {
-      _status = _Status.processing;
-      _message = 'Importing data from file...';
-    });
-
-    try {
-      final inputFile = await _pickFile();
-
-      if (inputFile == null) {
-        setState(() {
-          _status = _Status.idle;
-        });
-        return;
-      }
-
-      // TODO: implement this
-      throw 'not implemented';
-      
-    } catch (ex) {
-      setState(() {
-        _status = _Status.error;
-        _message = ex.toString();
-      });
-    }
-  }
-
-  Future<File?> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-        allowMultiple: false, dialogTitle: 'Select file for import.');
-
-    if (result == null || result.files.isEmpty) return null;
-
-    return File(result.files.first.path!);
   }
 
   void _importJsonFromMyApp2(BuildContext context) async {
@@ -282,12 +178,6 @@ class _BackupAndRestorePageState extends State<BackupAndRestorePage> {
       });
     }
   }
-}
-
-String _getExportFileName() {
-  final df = DateFormat('yyyy-MM-dd-HHmmss');
-  final part = df.format(DateTime.now());
-  return '$part-my-app-3-backup';
 }
 
 enum _Status {

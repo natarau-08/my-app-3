@@ -144,7 +144,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
             displayStringForOption: (item) => item.name,
             onFieldBuilding: (tec) => _tagsController = tec,
             optionBuilder: (context, item) {
-              final color = item.color == null ? null : Color(item.color!);
+              final color = item.color;
 
               return InkWell(
                 onTap: () => _onTagSelected(item),
@@ -265,7 +265,7 @@ class _ExpenseTagChip extends StatelessWidget {
     Color? c;
     TextStyle? ts;
     if(tag.color != null){
-      c = Color(tag.color!);
+      c = tag.color!;
       final l = c.computeLuminance();
       ts = TextStyle(color: l > 0.5 ? Colors.black : Colors.white);
     }

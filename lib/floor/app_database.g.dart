@@ -80,8 +80,6 @@ class _$AppDatabase extends AppDatabase {
 
   ScheduledExpenseDao? _scheduledExpenseDaoInstance;
 
-  BackupAndRestoreDao? _backupAndRestoreDaoInstance;
-
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -108,7 +106,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `expenses` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `value` REAL NOT NULL, `details` TEXT, `created_date` TEXT NOT NULL, `generated` INTEGER)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `tags` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `description` TEXT, `color` INTEGER, `added_time` TEXT NOT NULL, `deleted` INTEGER NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `tags` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `description` TEXT, `color` TEXT, `added_time` TEXT NOT NULL, `deleted` INTEGER NOT NULL)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `expense_tags` (`tag_id` INTEGER, `expense_id` INTEGER, PRIMARY KEY (`tag_id`, `expense_id`))');
         await database.execute(
@@ -158,12 +156,6 @@ class _$AppDatabase extends AppDatabase {
   ScheduledExpenseDao get scheduledExpenseDao {
     return _scheduledExpenseDaoInstance ??=
         _$ScheduledExpenseDao(database, changeListener);
-  }
-
-  @override
-  BackupAndRestoreDao get backupAndRestoreDao {
-    return _backupAndRestoreDaoInstance ??=
-        _$BackupAndRestoreDao(database, changeListener);
   }
 }
 
@@ -275,7 +267,7 @@ class _$ExpenseDao extends ExpenseDao {
   Future<List<Tag>> getTagsForExpenseId(int id) async {
     return _queryAdapter.queryList(
         'select   t.* from expense_tags et join tags t on t.id = et.tag_id where et.expense_id = ?1',
-        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: row['color'] as int?, added: _dateTimeTc.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0),
+        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: _colorTcN.decode(row['color'] as String?), added: _dateTimeTc.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0),
         arguments: [id]);
   }
 
@@ -428,7 +420,7 @@ class _$TagDao extends TagDao {
                   'id': item.id,
                   'name': item.name,
                   'description': item.description,
-                  'color': item.color,
+                  'color': _colorTcN.encode(item.color),
                   'added_time': _dateTimeTc.encode(item.added),
                   'deleted': item.deleted ? 1 : 0
                 },
@@ -441,7 +433,7 @@ class _$TagDao extends TagDao {
                   'id': item.id,
                   'name': item.name,
                   'description': item.description,
-                  'color': item.color,
+                  'color': _colorTcN.encode(item.color),
                   'added_time': _dateTimeTc.encode(item.added),
                   'deleted': item.deleted ? 1 : 0
                 },
@@ -464,7 +456,7 @@ class _$TagDao extends TagDao {
             id: row['id'] as int?,
             name: row['name'] as String,
             description: row['description'] as String?,
-            color: row['color'] as int?,
+            color: _colorTcN.decode(row['color'] as String?),
             added: _dateTimeTc.decode(row['added_time'] as String),
             deleted: (row['deleted'] as int) != 0),
         queryableName: 'tags',
@@ -478,7 +470,7 @@ class _$TagDao extends TagDao {
             id: row['id'] as int?,
             name: row['name'] as String,
             description: row['description'] as String?,
-            color: row['color'] as int?,
+            color: _colorTcN.decode(row['color'] as String?),
             added: _dateTimeTc.decode(row['added_time'] as String),
             deleted: (row['deleted'] as int) != 0));
   }
@@ -605,7 +597,7 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   Future<List<Tag>> getTagsOfScheduledExpense(int id) async {
     return _queryAdapter.queryList(
         'select t.* from scheduled_expense_tags st join tags t on t.id = st.tag_id where st.scheduled_expense_id=?1',
-        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: row['color'] as int?, added: _dateTimeTc.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0),
+        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: _colorTcN.decode(row['color'] as String?), added: _dateTimeTc.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0),
         arguments: [id]);
   }
 
@@ -652,48 +644,6 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   }
 }
 
-class _$BackupAndRestoreDao extends BackupAndRestoreDao {
-  _$BackupAndRestoreDao(
-    this.database,
-    this.changeListener,
-  ) : _queryAdapter = QueryAdapter(database);
-
-  final sqflite.DatabaseExecutor database;
-
-  final StreamController<String> changeListener;
-
-  final QueryAdapter _queryAdapter;
-
-  @override
-  Future<int?> mTagsCount() async {
-    return _queryAdapter.query('select count(*) from tags',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<int?> mExpensesCount() async {
-    return _queryAdapter.query('select count(*) from expenses',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<int?> mExpenseTagsCount() async {
-    return _queryAdapter.query('select count(*) from expense_tags',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<int?> mScheduledExpensesCount() async {
-    return _queryAdapter.query('select count(*) from scheduled_expenses',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-
-  @override
-  Future<int?> mScheduledExpenseTagsCount() async {
-    return _queryAdapter.query('select count(*) from scheduled_expense_tags',
-        mapper: (Map<String, Object?> row) => row.values.first as int);
-  }
-}
-
 // ignore_for_file: unused_element
 final _dateTimeTc = DateTimeTc();
+final _colorTcN = ColorTcN();

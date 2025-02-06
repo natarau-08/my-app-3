@@ -41,7 +41,7 @@ class TagsListBuilder extends StatelessWidget{
               final tag = snapshot.data![index];
 
               final cs = Theme.of(context).colorScheme;
-              final Color? color = tag.color == null ? null : Color(tag.color!);
+              final Color? color = tag.color;
 
               return Dismissible(
                 key: Key(tag.id.toString()),

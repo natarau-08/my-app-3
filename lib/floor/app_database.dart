@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:floor/floor.dart';
 import 'package:my_app_3/floor/daos/app_settings_dao.dart';
-import 'package:my_app_3/floor/daos/backup_and_restore_dao.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart' as sqflite;
 
@@ -17,6 +16,7 @@ import 'tables/expense_tag.dart';
 import 'tables/scheduled_expense.dart';
 import 'tables/scheduled_expense_tag.dart';
 import 'tables/tag.dart';
+import 'type_converters/color_tc.dart';
 import 'type_converters/date_time_tc.dart';
 import 'views/expense_list_view.dart';
 import 'views/expense_month_summary_view.dart';
@@ -40,7 +40,7 @@ part 'app_database.g.dart';
     ExpenseMonthSummaryView,
   ]
 )
-@TypeConverters([DateTimeTc])
+@TypeConverters([DateTimeTc, ColorTcN])
 abstract class AppDatabase extends FloorDatabase {
   static const dbFileName = 'my-app.db';
   static late AppDatabase instance;
@@ -49,7 +49,6 @@ abstract class AppDatabase extends FloorDatabase {
   ExpenseDao get expenseDao;
   TagDao get tagDao;
   ScheduledExpenseDao get scheduledExpenseDao;
-  BackupAndRestoreDao get backupAndRestoreDao;
 
   static Future<void> initialize() async {
     String dbName = dbFileName;
