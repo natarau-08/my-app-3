@@ -1,5 +1,5 @@
 select
-  ROW_NUMBER() OVER(order by case when t.name is null then 1 else 0 end, t.name) as `crtNo`,
+  ROW_NUMBER() OVER(order by SUM(e.value) desc) as `crtNo`,
   t.name as `tagName`,
   SUM(case when e.value > 0 then e.value else 0 end) as `loss`,
   SUM(case when e.value < 0 then e.value else 0 end) as `gain`,

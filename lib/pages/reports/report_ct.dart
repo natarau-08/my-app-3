@@ -2,11 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_app_3/app_assets.dart';
 import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
+import 'package:my_app_3/floor/app_database.dart';
 import 'package:my_app_3/utils.dart';
-
-import '../../floor/raw/report_ct_sql.dart';
 
 class ReportCt extends StatefulWidget {
   static String title = 'Costs by tags report';
@@ -23,12 +23,22 @@ class _ReportCtState extends State<ReportCt> {
   late int _year;
   late Future<List<Map<String, dynamic>>> _future;
 
+  Future<List<Map<String, dynamic>>> _runReport() async {
+    final startDate = DateTime(_year, _month, 1);
+    final endDate = Utils.addMonths(startDate, 1);
+
+    return await AppDatabase.instance.database.database.rawQuery(
+      await AppAssets.loadSql('report_ct'),
+      [startDate.toIso8601String(), endDate.toIso8601String()]
+    ) as List<Map<String, dynamic>>;
+  }
+
   @override
   void initState() {
     final now = DateTime.now();
     _month = now.month;
     _year = now.year;
-    _future = ReportCtSql.reportCtMonthly(_year, _month);
+    _future = _runReport();
     super.initState();
   }
 
@@ -53,7 +63,7 @@ class _ReportCtState extends State<ReportCt> {
             setState(() {
               _year = year;
               _month = month;
-              _future = ReportCtSql.reportCtMonthly(year, month);
+              _future = _runReport();
             });
           },
           icon: const Icon(Icons.filter_alt)
@@ -76,11 +86,11 @@ class _ReportCtState extends State<ReportCt> {
               children: [
                 DataTable(
                   columns: [
-                    DataColumn(label: Text('Crt No')),
+                    DataColumn(label: Text('No')),
                     DataColumn(label: Text('Tag')),
-                    DataColumn(label: Text('Gain')),
-                    DataColumn(label: Text('Loss')),
-                    DataColumn(label: Text('Total')),
+                    DataColumn(label: Text('Gain'), numeric: true),
+                    DataColumn(label: Text('Loss'), numeric: true),
+                    DataColumn(label: Text('Total'), numeric: true),
                   ],
                   rows: [for(final x in data) DataRow(
                     cells: [
