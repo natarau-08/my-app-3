@@ -78,10 +78,9 @@ class TagsListBuilder extends StatelessWidget{
                         alignment: Alignment.centerRight,
                         child: Text(
                           Utils.formatDateTimeLong(tag.added),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
-                            color: Colors.black45
                           ),
                         ),
                       )

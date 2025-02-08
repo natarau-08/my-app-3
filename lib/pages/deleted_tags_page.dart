@@ -23,8 +23,7 @@ class _DeletedTagsPageState extends State<DeletedTagsPage> {
 
   @override
   void initState() {
-    _stream = AppDatabase.instance.tagDao.watchAllTags();
-    _stream = Stream.empty();
+    _stream = AppDatabase.instance.tagDao.streamDeletedTags();
     super.initState();
   }
 

@@ -5,7 +5,13 @@ import 'package:my_app_3/floor/tables/tag.dart';
 @dao
 abstract class TagDao {
   @Query('select * from tags')
-  Stream<List<Tag>> watchAllTags();
+  Stream<List<Tag>> streamAllTags();
+
+  @Query('select * from tags where deleted=0')
+  Stream<List<Tag>> streamActiveTags();
+
+  @Query('select * from tags where deleted=1')
+  Stream<List<Tag>> streamDeletedTags();
 
   @Query('select * from tags')
   Future<List<Tag>> getAllTags();

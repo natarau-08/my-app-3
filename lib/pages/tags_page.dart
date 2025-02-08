@@ -23,7 +23,7 @@ class _TagsPageState extends State<TagsPage> {
 
   @override
   void initState() {
-    _stream = AppDatabase.instance.tagDao.watchAllTags();
+    _stream = AppDatabase.instance.tagDao.streamActiveTags();
     super.initState();
   }
 
