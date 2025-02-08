@@ -11,56 +11,60 @@ void main() async {
 
   // get route to be restored
   final route = await AppDatabase.instance.appSettingsDao.getRestoreRoute();
-  final brightness = await DarkModeSettings.getBrightness();
+  GlobalKeys.themeNotifier.value = await DarkModeSettings.getBrightness();
 
   AppDatabase.instance.scheduledExpenseDao.generateExpenses();
 
-  runApp(MainApp(initialRoute: route, brightness: brightness,));
+  runApp(MainApp(initialRoute: route));
 }
 
 class MainApp extends StatelessWidget {
   final String initialRoute;
-  final Brightness brightness;
 
-  const MainApp({super.key, required this.initialRoute, required this.brightness});
+  const MainApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return MaterialApp(
-      scaffoldMessengerKey: GlobalKeys.scaffoldMessengerKey,
-      navigatorKey: GlobalKeys.navigatorKey,
-      routes: {
-        for(var ri in RouteInfo.routeList)
-          ri.route: ri.routeBuilder
-      },
-      initialRoute: initialRoute,
-
-      theme: ThemeData(
-        brightness: brightness,
-        inputDecorationTheme: const InputDecorationTheme(
-          isDense: true,
-          contentPadding: EdgeInsets.only(bottom: 8, top: 2)
-        ),
-
-        appBarTheme: AppBarTheme(
-          backgroundColor: cs.primary,
-          titleTextStyle: TextStyle(
-            color: cs.onPrimary,
-            fontSize: 20,
+    return ValueListenableBuilder(
+      valueListenable: GlobalKeys.themeNotifier,
+      builder: (context, brightness, child) {
+        return MaterialApp(
+          scaffoldMessengerKey: GlobalKeys.scaffoldMessengerKey,
+          navigatorKey: GlobalKeys.navigatorKey,
+          routes: {
+            for(var ri in RouteInfo.routeList)
+              ri.route: ri.routeBuilder
+          },
+          initialRoute: initialRoute,
+        
+          theme: ThemeData(
+            brightness: brightness,
+            inputDecorationTheme: const InputDecorationTheme(
+              isDense: true,
+              contentPadding: EdgeInsets.only(bottom: 8, top: 2)
+            ),
+        
+            appBarTheme: AppBarTheme(
+              backgroundColor: cs.primary,
+              titleTextStyle: TextStyle(
+                color: cs.onPrimary,
+                fontSize: 20,
+              ),
+              iconTheme: IconThemeData(
+                color: cs.onPrimary
+              )
+            ),
+        
+            dropdownMenuTheme: const DropdownMenuThemeData(
+              inputDecorationTheme: InputDecorationTheme(
+                contentPadding: EdgeInsets.symmetric(horizontal: 8)
+              )
+            ),
           ),
-          iconTheme: IconThemeData(
-            color: cs.onPrimary
-          )
-        ),
-
-        dropdownMenuTheme: const DropdownMenuThemeData(
-          inputDecorationTheme: InputDecorationTheme(
-            contentPadding: EdgeInsets.symmetric(horizontal: 8)
-          )
-        ),
-      ),
+        );
+      }
     );
   }
 }

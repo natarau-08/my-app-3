@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/app_settings_keys.dart';
 import 'package:my_app_3/controls/form_separator.dart';
+import 'package:my_app_3/global_keys.dart';
 import 'package:my_app_3/pages/backup_and_restore_page.dart';
 import 'package:my_app_3/route_info.dart';
 
@@ -125,7 +126,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       DropdownMenuEntry(value: DarkModeSettings.platform, label: 'System', trailingIcon: Icon(Icons.computer)),
                     ],
                     onSelected: (value) async {
-                      await AppDatabase.instance.appSettingsDao.setValue(DarkModeSettings.key, value ?? DarkModeSettings.platform);
+                      final val = value ?? DarkModeSettings.platform;
+                      await AppDatabase.instance.appSettingsDao.setValue(DarkModeSettings.key, val);
+                      GlobalKeys.themeNotifier.value = await DarkModeSettings.getBrightness();
                     },
                   ),
                 )
