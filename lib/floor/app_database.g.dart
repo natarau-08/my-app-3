@@ -450,20 +450,6 @@ class _$TagDao extends TagDao {
   final UpdateAdapter<Tag> _tagUpdateAdapter;
 
   @override
-  Stream<List<Tag>> streamAllTags() {
-    return _queryAdapter.queryListStream('select * from tags',
-        mapper: (Map<String, Object?> row) => Tag(
-            id: row['id'] as int?,
-            name: row['name'] as String,
-            description: row['description'] as String?,
-            color: _colorTcN.decode(row['color'] as String?),
-            added: _dateTimeTc.decode(row['added_time'] as String),
-            deleted: (row['deleted'] as int) != 0),
-        queryableName: 'tags',
-        isView: false);
-  }
-
-  @override
   Stream<List<Tag>> streamActiveTags() {
     return _queryAdapter.queryListStream('select * from tags where deleted=0',
         mapper: (Map<String, Object?> row) => Tag(

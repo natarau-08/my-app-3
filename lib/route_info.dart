@@ -5,6 +5,8 @@ import 'package:my_app_3/pages/edit_expense_page.dart';
 import 'package:my_app_3/pages/backup_and_restore_page.dart';
 import 'package:my_app_3/pages/edit_scheduled_expense_page.dart';
 import 'package:my_app_3/pages/home_page.dart';
+import 'package:my_app_3/pages/reports/report_ct.dart';
+import 'package:my_app_3/pages/reports_page.dart';
 import 'package:my_app_3/pages/scheduled_expenses_page.dart';
 import 'package:my_app_3/pages/settings_page.dart';
 
@@ -20,6 +22,7 @@ class RouteInfo {
     RouteInfo(AddExpensePage.title, AddExpensePage.route, (context) => const AddExpensePage(), menuIcon: const Icon(Icons.euro, color: Constants.colorGold,)),
     RouteInfo(TagsPage.title, TagsPage.route, (context) => const TagsPage(), menuIcon: const Icon(Icons.tag, color: Constants.colorBlue,)),
     RouteInfo(ExpenseListPage.title, ExpenseListPage.route, (context) => const ExpenseListPage(), menuIcon: const Icon(Icons.list)),
+    RouteInfo(ReportsPage.title, ReportsPage.route, (context) => const ReportsPage(), menuIcon: const Icon(Icons.auto_graph, color: Constants.colorBlue,)),
 
     // other routes: title is null => they do not appear in the main menu
     RouteInfo(null, EditTagPage.route, (context) => const EditTagPage()),
@@ -28,7 +31,8 @@ class RouteInfo {
     RouteInfo(null, EditExpensePage.route, (context) => const EditExpensePage()),
     RouteInfo(null, BackupAndRestorePage.route, (context) => const BackupAndRestorePage()),
     RouteInfo(null, ScheduledExpensesPage.route, (context) => const ScheduledExpensesPage()),
-    RouteInfo(null, EditScheduledExpensePage.route, (context) => const EditScheduledExpensePage())
+    RouteInfo(null, EditScheduledExpensePage.route, (context) => const EditScheduledExpensePage()),
+    RouteInfo(null, ReportCt.route, (context) => const ReportCt()),
   ];
 
   static final routeMenuList = routeList.where((x) => x.title != null);
