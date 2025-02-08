@@ -51,6 +51,7 @@ class _ReportCtState extends State<ReportCt> {
           onPressed: () async {
             final pair = await showModalBottomSheet(
               context: context,
+              useSafeArea: true,
               builder: (context) => _Filter(_year, _month)
             );
 
@@ -157,9 +158,9 @@ class _FilterState extends State<_Filter> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 170,
+      height: 170 + MediaQuery.of(context).viewInsets.bottom,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 32, 16, 16),
+        padding: EdgeInsets.fromLTRB(16, 32, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           spacing: 16,
           children: [
