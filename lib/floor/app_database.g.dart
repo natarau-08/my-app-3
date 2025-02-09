@@ -106,7 +106,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `expenses` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `value` REAL NOT NULL, `details` TEXT, `created_date` TEXT NOT NULL, `generated` INTEGER)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `tags` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `description` TEXT, `color` TEXT, `added_time` TEXT NOT NULL, `deleted` INTEGER NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `tags` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `description` TEXT, `color` TEXT, `added_time` TEXT NOT NULL, `deleted` INTEGER NOT NULL, `last_used` TEXT)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `expense_tags` (`tag_id` INTEGER, `expense_id` INTEGER, PRIMARY KEY (`tag_id`, `expense_id`))');
         await database.execute(
@@ -229,7 +229,7 @@ class _$ExpenseDao extends ExpenseDao {
                   'id': item.id,
                   'value': item.value,
                   'details': item.details,
-                  'created_date': _dateTimeTc.encode(item.createdDate),
+                  'created_date': _dateTimeTc2.encode(item.createdDate),
                   'generated': item.generated
                 }),
         _expenseTagInsertionAdapter = InsertionAdapter(
@@ -247,7 +247,7 @@ class _$ExpenseDao extends ExpenseDao {
                   'id': item.id,
                   'value': item.value,
                   'details': item.details,
-                  'created_date': _dateTimeTc.encode(item.createdDate),
+                  'created_date': _dateTimeTc2.encode(item.createdDate),
                   'generated': item.generated
                 });
 
@@ -267,7 +267,7 @@ class _$ExpenseDao extends ExpenseDao {
   Future<List<Tag>> getTagsForExpenseId(int id) async {
     return _queryAdapter.queryList(
         'select   t.* from expense_tags et join tags t on t.id = et.tag_id where et.expense_id = ?1',
-        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: _colorTcN.decode(row['color'] as String?), added: _dateTimeTc.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0),
+        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: _colorTcN.decode(row['color'] as String?), added: _dateTimeTc2.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0, lastUsed: _dateTimeTc.decode(row['last_used'] as String?)),
         arguments: [id]);
   }
 
@@ -295,7 +295,7 @@ class _$ExpenseDao extends ExpenseDao {
         'select * from vw_expense_list where year=?1 and month=?2',
         mapper: (Map<String, Object?> row) => ExpenseListView(
             id: row['id'] as int,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
+            createdDate: _dateTimeTc2.decode(row['created_date'] as String),
             value: row['value'] as double,
             details: row['details'] as String?,
             generated: row['generated'] as int?,
@@ -329,7 +329,7 @@ class _$ExpenseDao extends ExpenseDao {
             id: row['id'] as int?,
             value: row['value'] as double,
             details: row['details'] as String?,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
+            createdDate: _dateTimeTc2.decode(row['created_date'] as String),
             generated: row['generated'] as int?),
         arguments: [id]);
   }
@@ -339,7 +339,7 @@ class _$ExpenseDao extends ExpenseDao {
     return _queryAdapter.query('select * from vw_expense_list where id=?1',
         mapper: (Map<String, Object?> row) => ExpenseListView(
             id: row['id'] as int,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
+            createdDate: _dateTimeTc2.decode(row['created_date'] as String),
             value: row['value'] as double,
             details: row['details'] as String?,
             generated: row['generated'] as int?,
@@ -421,8 +421,9 @@ class _$TagDao extends TagDao {
                   'name': item.name,
                   'description': item.description,
                   'color': _colorTcN.encode(item.color),
-                  'added_time': _dateTimeTc.encode(item.added),
-                  'deleted': item.deleted ? 1 : 0
+                  'added_time': _dateTimeTc2.encode(item.added),
+                  'deleted': item.deleted ? 1 : 0,
+                  'last_used': _dateTimeTc.encode(item.lastUsed)
                 },
             changeListener),
         _tagUpdateAdapter = UpdateAdapter(
@@ -434,8 +435,9 @@ class _$TagDao extends TagDao {
                   'name': item.name,
                   'description': item.description,
                   'color': _colorTcN.encode(item.color),
-                  'added_time': _dateTimeTc.encode(item.added),
-                  'deleted': item.deleted ? 1 : 0
+                  'added_time': _dateTimeTc2.encode(item.added),
+                  'deleted': item.deleted ? 1 : 0,
+                  'last_used': _dateTimeTc.encode(item.lastUsed)
                 },
             changeListener);
 
@@ -457,8 +459,9 @@ class _$TagDao extends TagDao {
             name: row['name'] as String,
             description: row['description'] as String?,
             color: _colorTcN.decode(row['color'] as String?),
-            added: _dateTimeTc.decode(row['added_time'] as String),
-            deleted: (row['deleted'] as int) != 0),
+            added: _dateTimeTc2.decode(row['added_time'] as String),
+            deleted: (row['deleted'] as int) != 0,
+            lastUsed: _dateTimeTc.decode(row['last_used'] as String?)),
         queryableName: 'tags',
         isView: false);
   }
@@ -471,8 +474,9 @@ class _$TagDao extends TagDao {
             name: row['name'] as String,
             description: row['description'] as String?,
             color: _colorTcN.decode(row['color'] as String?),
-            added: _dateTimeTc.decode(row['added_time'] as String),
-            deleted: (row['deleted'] as int) != 0),
+            added: _dateTimeTc2.decode(row['added_time'] as String),
+            deleted: (row['deleted'] as int) != 0,
+            lastUsed: _dateTimeTc.decode(row['last_used'] as String?)),
         queryableName: 'tags',
         isView: false);
   }
@@ -485,8 +489,9 @@ class _$TagDao extends TagDao {
             name: row['name'] as String,
             description: row['description'] as String?,
             color: _colorTcN.decode(row['color'] as String?),
-            added: _dateTimeTc.decode(row['added_time'] as String),
-            deleted: (row['deleted'] as int) != 0));
+            added: _dateTimeTc2.decode(row['added_time'] as String),
+            deleted: (row['deleted'] as int) != 0,
+            lastUsed: _dateTimeTc.decode(row['last_used'] as String?)));
   }
 
   @override
@@ -538,8 +543,8 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
                   'id': item.id,
                   'value': item.value,
                   'details': item.details,
-                  'created_date': _dateTimeTc.encode(item.createdDate),
-                  'next_insert': _dateTimeTc.encode(item.nextInsert),
+                  'created_date': _dateTimeTc2.encode(item.createdDate),
+                  'next_insert': _dateTimeTc2.encode(item.nextInsert),
                   'repeat_pattern': item.repeatPattern
                 },
             changeListener),
@@ -558,8 +563,8 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
                   'id': item.id,
                   'value': item.value,
                   'details': item.details,
-                  'created_date': _dateTimeTc.encode(item.createdDate),
-                  'next_insert': _dateTimeTc.encode(item.nextInsert),
+                  'created_date': _dateTimeTc2.encode(item.createdDate),
+                  'next_insert': _dateTimeTc2.encode(item.nextInsert),
                   'repeat_pattern': item.repeatPattern
                 },
             changeListener);
@@ -585,8 +590,8 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
             id: row['id'] as int?,
             value: row['value'] as double,
             details: row['details'] as String?,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
-            nextInsert: _dateTimeTc.decode(row['next_insert'] as String),
+            createdDate: _dateTimeTc2.decode(row['created_date'] as String),
+            nextInsert: _dateTimeTc2.decode(row['next_insert'] as String),
             repeatPattern: row['repeat_pattern'] as String),
         queryableName: 'scheduled_expenses',
         isView: false);
@@ -601,17 +606,17 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
             id: row['id'] as int?,
             value: row['value'] as double,
             details: row['details'] as String?,
-            createdDate: _dateTimeTc.decode(row['created_date'] as String),
-            nextInsert: _dateTimeTc.decode(row['next_insert'] as String),
+            createdDate: _dateTimeTc2.decode(row['created_date'] as String),
+            nextInsert: _dateTimeTc2.decode(row['next_insert'] as String),
             repeatPattern: row['repeat_pattern'] as String),
-        arguments: [_dateTimeTc.encode(t)]);
+        arguments: [_dateTimeTc2.encode(t)]);
   }
 
   @override
   Future<List<Tag>> getTagsOfScheduledExpense(int id) async {
     return _queryAdapter.queryList(
         'select t.* from scheduled_expense_tags st join tags t on t.id = st.tag_id where st.scheduled_expense_id=?1',
-        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: _colorTcN.decode(row['color'] as String?), added: _dateTimeTc.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0),
+        mapper: (Map<String, Object?> row) => Tag(id: row['id'] as int?, name: row['name'] as String, description: row['description'] as String?, color: _colorTcN.decode(row['color'] as String?), added: _dateTimeTc2.decode(row['added_time'] as String), deleted: (row['deleted'] as int) != 0, lastUsed: _dateTimeTc.decode(row['last_used'] as String?)),
         arguments: [id]);
   }
 
@@ -660,4 +665,5 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
 
 // ignore_for_file: unused_element
 final _dateTimeTc = DateTimeTc();
+final _dateTimeTc2 = DateTimeTc2();
 final _colorTcN = ColorTcN();

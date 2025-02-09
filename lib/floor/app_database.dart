@@ -40,7 +40,7 @@ part 'app_database.g.dart';
     ExpenseMonthSummaryView,
   ]
 )
-@TypeConverters([DateTimeTc, ColorTcN])
+@TypeConverters([DateTimeTc, DateTimeTc2, ColorTcN])
 abstract class AppDatabase extends FloorDatabase {
   static const dbFileName = 'my-app.db';
   static late AppDatabase instance;

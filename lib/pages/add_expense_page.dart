@@ -40,6 +40,11 @@ class AddExpensePage extends StatelessWidget {
           child: EditExpenseForm(
               onSaving: (expense, tags) async {
                 await AppDatabase.instance.expenseDao.saveExpenseWithTags(expense, tags);
+                
+                for(final t in tags){
+                  t.lastUsed = DateTime.now();
+                  await AppDatabase.instance.tagDao.update(t);
+                }
               },
           ),
         ),

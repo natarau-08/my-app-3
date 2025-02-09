@@ -2,8 +2,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:my_app_3/controls/centered_widgets.dart';
 
-import '../controls/autocomplete_widget.dart';
 import '../controls/form_separator.dart';
 import '../floor/app_database.dart';
 import '../floor/tables/expense.dart';
@@ -34,11 +34,9 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
   final _detailsController = TextEditingController();
   final _ddController = TextEditingController();
 
-  TextEditingController? _tagsController;
   bool _keepTagsBetweenSaves = true;
 
   final List<Tag> _tags = List.empty(growable: true);
-  late Future<List<Tag>> _acTags;
 
   @override
   void initState() {
@@ -59,8 +57,6 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
       });
     }
 
-    _acTags = AppDatabase.instance.tagDao.getActiveTags();
-
     super.initState();
   }
 
@@ -74,7 +70,6 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Form(
       key: _formKey,
       child: Column(
@@ -130,71 +125,39 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
               spacing: 5,
               runSpacing: 5,
               children: [
-                if(_tags.isEmpty) Text('No tags added.', style: TextStyle(color: cs.tertiary),)
-                else for(var t in _tags) _ExpenseTagChip(
+                for(var t in _tags) _ExpenseTagChip(
                   t,
                   onDeleted: _onTagDeleting,
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    FocusScope.of(context).unfocus();
+                    final tag = await showDialog<Tag>(
+                        context: context,
+                        builder: (context) => _TagDialog(_tags)
+                    );
+                    
+                    if(tag != null && context.mounted) {
+                      if(_tags.any((t) => t.id == tag.id)) {
+                        ScaffoldMessenger
+                            .of(context)
+                            .showSnackBar(
+                            SnackBar(content: Text('${tag.name} already added.'))
+                        );
+                      } else {
+                        setState(() {
+                          _tags.add(tag);
+                        });
+                      }
+                    }
+                  },
+                  child: Text('Add tag'),
                 )
               ],
             ),
           ),
 
           const SizedBox(height: 8.0,),
-
-          FutureBuilder(
-            future: _acTags,
-            builder: (context, snapshot){
-              if(snapshot.connectionState == ConnectionState.waiting){
-                return Text('Loading tags...');
-              }else if(snapshot.hasError){
-                return Text('Error loading tags: ${snapshot.error}');
-              }else if(!snapshot.hasData || snapshot.data==null || snapshot.data!.isEmpty){
-                return Text('No tags found.');
-              }
-
-              return DropdownMenu<Tag>(
-                dropdownMenuEntries: snapshot.data!.map((t) => DropdownMenuEntry(
-                  value: t,
-                  label: t.name,
-                  trailingIcon: t.color == null ? null : Icon(Icons.circle, color: t.color,),
-                )).toList(),
-                expandedInsets: EdgeInsets.all(0),
-                onSelected: (value) {
-                  if(value != null){
-                    _ddController.clear();
-                    _onTagSelected(value);
-                  }
-                },
-                controller: _ddController,
-              );
-            }
-          ),
-
-          // AutocompleteWidget(
-          //   options: _acTags,
-          //   displayStringForOption: (item) => item.name,
-          //   onFieldBuilding: (tec) => _tagsController = tec,
-          //   optionBuilder: (context, item) {
-          //     final color = item.color;
-
-          //     return InkWell(
-          //       onTap: () {
-          //         FocusScope.of(context).unfocus();
-          //         _onTagSelected(item);
-          //       },
-          //       splashColor: item.color == null ? null : color,
-          //       child: Padding(
-          //         padding: const EdgeInsets.all(16.0),
-          //         child: Row(
-          //             children: [
-          //               Expanded(child: Text(item.name)),
-          //               if(item.color != null) Icon(Icons.circle, color: color,)
-          //             ]
-          //         ),
-          //       ),
-          //     );
-          //   },
-          // ),
 
           if(widget.expenseData == null) ...[
             const FormSeparator(),
@@ -270,21 +233,64 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
       _tags.remove(t);
     });
   }
+}
 
-  void _onTagSelected(Tag tag){
-    if(_tags.any((t) => t.id == tag.id)) {
-      ScaffoldMessenger
-          .of(context)
-          .showSnackBar(
-          SnackBar(content: Text('${tag.name} already added.'))
-      );
-    } else {
-      _tags.add(tag);
-    }
+class _TagDialog extends StatefulWidget {
+  final List<Tag> addedTags;
+  const _TagDialog(this.addedTags);
 
-    setState(() {
-      _tagsController?.clear();
-    });
+  @override
+  State<_TagDialog> createState() => _TagDialogState();
+}
+
+class _TagDialogState extends State<_TagDialog> {
+  final _tagsFuture = AppDatabase.instance.tagDao.getActiveTags();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Choose tags', style: TextStyle(fontWeight: FontWeight.bold),),
+          ),
+          Divider(height: 0.5,),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: FutureBuilder(
+              future: _tagsFuture,
+              builder: (context, snapshot){
+                final w = SimpleProgressIndicator.handleSnapshotForLoadingOrError(snapshot);
+                if(w != null) return w;
+            
+                final tags = [for(final t in snapshot.data as List<Tag>)
+                  if(!widget.addedTags.any((at) => at.id == t.id)) t];
+            
+                if(tags.isEmpty){
+                  return NoDataAvailableCenteredWidget();
+                }
+            
+                return ListView.builder(
+                  itemCount: tags.length,
+                  itemBuilder: (context, index){
+                    final tag = tags[index];
+                    return ListTile(
+                      title: Text(tag.name),
+                      trailing: tag.color == null ? null : Icon(Icons.circle, color: tag.color,),
+                      onTap: () => Navigator.of(context).pop(tag),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

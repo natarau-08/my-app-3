@@ -10,7 +10,7 @@ abstract class TagDao {
   @Query('select * from tags where deleted=1')
   Stream<List<Tag>> streamDeletedTags();
 
-  @Query('select * from tags where deleted=0')
+  @Query('select * from tags where deleted=0 order by last_used desc, name')
   Future<List<Tag>> getActiveTags();
 
   @Insert()

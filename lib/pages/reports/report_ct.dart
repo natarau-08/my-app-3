@@ -86,6 +86,7 @@ class _ReportCtState extends State<ReportCt> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 DataTable(
+                  columnSpacing: 10,
                   columns: [
                     DataColumn(label: Text('No')),
                     DataColumn(label: Text('Tag')),

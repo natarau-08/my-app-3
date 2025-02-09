@@ -27,12 +27,16 @@ class Tag {
   @ColumnInfo(name: 'deleted')
   bool deleted;
 
+  @ColumnInfo(name: 'last_used')
+  DateTime? lastUsed;
+
   Tag({
     this.id,
     required this.name,
     this.description,
     this.color,
     required this.added,
-    this.deleted = false
+    this.deleted = false,
+    this.lastUsed
   });
 }
