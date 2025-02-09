@@ -478,8 +478,8 @@ class _$TagDao extends TagDao {
   }
 
   @override
-  Future<List<Tag>> getAllTags() async {
-    return _queryAdapter.queryList('select * from tags',
+  Future<List<Tag>> getActiveTags() async {
+    return _queryAdapter.queryList('select * from tags where deleted=0',
         mapper: (Map<String, Object?> row) => Tag(
             id: row['id'] as int?,
             name: row['name'] as String,

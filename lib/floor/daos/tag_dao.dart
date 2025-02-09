@@ -10,8 +10,8 @@ abstract class TagDao {
   @Query('select * from tags where deleted=1')
   Stream<List<Tag>> streamDeletedTags();
 
-  @Query('select * from tags')
-  Future<List<Tag>> getAllTags();
+  @Query('select * from tags where deleted=0')
+  Future<List<Tag>> getActiveTags();
 
   @Insert()
   Future<int> insertTag(Tag e);

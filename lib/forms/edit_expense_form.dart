@@ -58,7 +58,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
       });
     }
 
-    _acTags = AppDatabase.instance.tagDao.getAllTags();
+    _acTags = AppDatabase.instance.tagDao.getActiveTags();
 
     super.initState();
   }

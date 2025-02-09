@@ -130,13 +130,13 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
               tileColor: cs.secondary,
               title: Row(
                 children: [
-                  Expanded(child: Text('Total month: ${item.totalMonth}', style: TextStyle(color: cs.onSecondary),)),
+                  Expanded(child: Text('Total month: ${item.totalMonth.toStringAsFixed(2)}', style: TextStyle(color: cs.onSecondary),)),
                   Text('${item.month}/${item.year}', style: TextStyle(fontWeight: FontWeight.bold, color: cs.onSecondary),)
                 ],
               ),
               subtitle: Row(
                 children: [
-                  Text('Balance: ${item.totalMonthGain} / ${item.totalMonthLoss}', style: TextStyle(color: cs.onSecondary),),
+                  Text('Balance: ${item.totalMonthGain.toStringAsFixed(2)} / ${item.totalMonthLoss.toStringAsFixed(2)}', style: TextStyle(color: cs.onSecondary),),
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
