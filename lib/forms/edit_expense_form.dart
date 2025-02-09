@@ -32,6 +32,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   final _valueController = TextEditingController();
   final _detailsController = TextEditingController();
+  final _ddController = TextEditingController();
 
   TextEditingController? _tagsController;
   bool _keepTagsBetweenSaves = true;
@@ -67,6 +68,7 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
   void dispose() {
     _valueController.dispose();
     _detailsController.dispose();
+    _ddController.dispose();
     super.dispose();
   }
 
@@ -139,28 +141,60 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
 
           const SizedBox(height: 8.0,),
 
-          AutocompleteWidget(
-            options: _acTags,
-            displayStringForOption: (item) => item.name,
-            onFieldBuilding: (tec) => _tagsController = tec,
-            optionBuilder: (context, item) {
-              final color = item.color;
+          FutureBuilder(
+            future: _acTags,
+            builder: (context, snapshot){
+              if(snapshot.connectionState == ConnectionState.waiting){
+                return Text('Loading tags...');
+              }else if(snapshot.hasError){
+                return Text('Error loading tags: ${snapshot.error}');
+              }else if(!snapshot.hasData || snapshot.data==null || snapshot.data!.isEmpty){
+                return Text('No tags found.');
+              }
 
-              return InkWell(
-                onTap: () => _onTagSelected(item),
-                splashColor: item.color == null ? null : color,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                      children: [
-                        Expanded(child: Text(item.name)),
-                        if(item.color != null) Icon(Icons.circle, color: color,)
-                      ]
-                  ),
-                ),
+              return DropdownMenu<Tag>(
+                dropdownMenuEntries: snapshot.data!.map((t) => DropdownMenuEntry(
+                  value: t,
+                  label: t.name,
+                  trailingIcon: t.color == null ? null : Icon(Icons.circle, color: t.color,),
+                )).toList(),
+                expandedInsets: EdgeInsets.all(0),
+                onSelected: (value) {
+                  if(value != null){
+                    _ddController.clear();
+                    _onTagSelected(value);
+                  }
+                },
+                controller: _ddController,
               );
-            },
+            }
           ),
+
+          // AutocompleteWidget(
+          //   options: _acTags,
+          //   displayStringForOption: (item) => item.name,
+          //   onFieldBuilding: (tec) => _tagsController = tec,
+          //   optionBuilder: (context, item) {
+          //     final color = item.color;
+
+          //     return InkWell(
+          //       onTap: () {
+          //         FocusScope.of(context).unfocus();
+          //         _onTagSelected(item);
+          //       },
+          //       splashColor: item.color == null ? null : color,
+          //       child: Padding(
+          //         padding: const EdgeInsets.all(16.0),
+          //         child: Row(
+          //             children: [
+          //               Expanded(child: Text(item.name)),
+          //               if(item.color != null) Icon(Icons.circle, color: color,)
+          //             ]
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // ),
 
           if(widget.expenseData == null) ...[
             const FormSeparator(),
