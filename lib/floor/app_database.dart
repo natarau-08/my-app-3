@@ -49,6 +49,8 @@ abstract class AppDatabase extends FloorDatabase {
   static const dbFileName = 'my-app.db';
   static late AppDatabase instance;
 
+  static String get dbPath => instance.database.database.path;
+
   AppSettingsDao get appSettingsDao;
   ExpenseDao get expenseDao;
   TagDao get tagDao;
@@ -83,9 +85,8 @@ abstract class AppDatabase extends FloorDatabase {
   }
 
   static Future<void> nukeDatabase() async {
-    final path = instance.database.database.path;
     await instance.close();
-    final f = File(path);
+    final f = File(dbPath);
     if(await f.exists()){
       await f.delete();
     }else{

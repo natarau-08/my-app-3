@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
 import 'package:my_app_3/pages/settings_page.dart';
 import 'package:my_app_3/utils.dart';
+import 'package:path/path.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../floor/app_database.dart';
 import '../floor/tables/expense.dart';
@@ -58,14 +62,110 @@ class _BackupAndRestorePageState extends State<BackupAndRestorePage> {
             ElevatedButton(
                 onPressed: () => _importJsonFromMyApp2(context),
                 child: const Text('Import from my app 2 JSON')),
+            
             const SizedBox(
               height: 8,
+            ),
+
+            ElevatedButton(
+              onPressed: () { _backupDatabase(context); },
+              child: const Text('Backup database')
+            ),
+
+            const SizedBox(
+              height: 8,
+            ),
+
+            ElevatedButton(
+              onPressed: () { _restoreDatabase(context); },
+              child: const Text('Restore database')
             ),
           ] else ...[
             const CircularProgressIndicator(),
             Text('${_message ?? 'Processing'}...'),
           ],
         ]));
+  }
+
+  void _backupDatabase(BuildContext context) async {
+    setState(() {
+      _status = _Status.processing;
+      _message = 'Backup database in progress...';
+    });
+
+    try{
+      // export path
+      final df = DateFormat('yyyy-MM-dd-HHmmss');
+      final part = df.format(DateTime.now());
+      final exportFileName = 'my-app-backup-$part.zip';
+      String? path;
+
+      if(Platform.isAndroid){
+        if (!await Permission.storage.request().isGranted && !await Permission.manageExternalStorage.request().isGranted) {
+          setState(() {
+            _message = 'Permission denied. Operation canceled.';
+            _status = _Status.error;
+          });
+          return;
+        }
+      }
+
+      // if(Platform.isAndroid){
+        path = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save backup file',
+          fileName: exportFileName
+        );
+      // }else{
+      //   path = File(Platform.resolvedExecutable).parent.path;
+      //   path = join(path, exportFileName);
+      // }
+
+      if(path == null){
+        setState(() {
+          _message = 'No file selected. Operation canceled.';
+          _status = _Status.idle;
+        });
+        return;
+      }
+
+      final dbFile = File(AppDatabase.dbPath);
+      final bytes = await dbFile.readAsBytes();
+
+      final archive = Archive()
+        ..addFile(ArchiveFile(basename(AppDatabase.dbPath), bytes.length, bytes));
+
+      final zipBytes = ZipEncoder().encode(archive);
+
+      final zipFile = File(path);
+      await zipFile.writeAsBytes(zipBytes);
+
+      setState(() {
+        _message = 'Database backup completed!';
+        _status = _Status.doneProcessing;
+      });
+
+    }catch(ex){
+      setState(() {
+        _message = ex.toString();
+        _status = _Status.error;
+      });
+    }
+  }
+
+  void _restoreDatabase(BuildContext context) async {
+    setState(() {
+      _status = _Status.processing;
+      _message = 'Restore database in progress...';
+    });
+
+    try{
+      throw 'Not implemented';
+    }catch(ex){
+      setState(() {
+        _message = ex.toString();
+        _status = _Status.error;
+      });
+    }
   }
 
   void _importJsonFromMyApp2(BuildContext context) async {
