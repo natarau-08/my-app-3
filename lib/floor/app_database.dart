@@ -76,10 +76,7 @@ abstract class AppDatabase extends FloorDatabase {
         }
       ))
       .addMigrations([
-        Migration(1, 2, (database) async {
-          final sql = await AppAssets.loadSql('migrations/1-2.sql');
-          await database.execute(sql);
-        })
+        await AppAssets.loadMigration(1, 2),
       ])
       .build();
   }
