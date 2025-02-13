@@ -17,6 +17,9 @@ abstract class ScheduledExpenseDao {
   @Update()
   Future<void> update(ScheduledExpense e);
 
+  @delete
+  Future<void> deleteScheduledExpense(ScheduledExpense e);
+
   @transaction
   Future<void> saveScheduledExpense(ScheduledExpense data, List<Tag> tags) async {
     late int id;

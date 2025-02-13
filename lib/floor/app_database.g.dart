@@ -483,7 +483,8 @@ class _$TagDao extends TagDao {
 
   @override
   Future<List<Tag>> getActiveTags() async {
-    return _queryAdapter.queryList('select * from tags where deleted=0',
+    return _queryAdapter.queryList(
+        'select * from tags where deleted=0 order by last_used desc, name',
         mapper: (Map<String, Object?> row) => Tag(
             id: row['id'] as int?,
             name: row['name'] as String,
@@ -567,6 +568,19 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
                   'next_insert': _dateTimeTc2.encode(item.nextInsert),
                   'repeat_pattern': item.repeatPattern
                 },
+            changeListener),
+        _scheduledExpenseDeletionAdapter = DeletionAdapter(
+            database,
+            'scheduled_expenses',
+            ['id'],
+            (ScheduledExpense item) => <String, Object?>{
+                  'id': item.id,
+                  'value': item.value,
+                  'details': item.details,
+                  'created_date': _dateTimeTc2.encode(item.createdDate),
+                  'next_insert': _dateTimeTc2.encode(item.nextInsert),
+                  'repeat_pattern': item.repeatPattern
+                },
             changeListener);
 
   final sqflite.DatabaseExecutor database;
@@ -581,6 +595,8 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
       _scheduledExpenseTagInsertionAdapter;
 
   final UpdateAdapter<ScheduledExpense> _scheduledExpenseUpdateAdapter;
+
+  final DeletionAdapter<ScheduledExpense> _scheduledExpenseDeletionAdapter;
 
   @override
   Stream<List<ScheduledExpense>> watchScheduledExpenses() {
@@ -642,6 +658,11 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   @override
   Future<void> update(ScheduledExpense e) async {
     await _scheduledExpenseUpdateAdapter.update(e, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> deleteScheduledExpense(ScheduledExpense e) async {
+    await _scheduledExpenseDeletionAdapter.delete(e);
   }
 
   @override
