@@ -107,3 +107,13 @@ class NoDataAvailableCenteredWidget extends StatelessWidget {
     );
   }
 }
+
+class NotImplementedWidget extends StatelessWidget {
+  const NotImplementedWidget({super.key});
+
+  @override
+  Widget build(Object context) {
+    return SimpleInfoIndicator('This page is not implemented yet.');
+  }
+  
+}

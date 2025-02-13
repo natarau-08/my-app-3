@@ -13,7 +13,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppMainPage(
       title: title,
-      body: SimpleInfoIndicator('This page is not implemented.'),
+      body: NotImplementedWidget(),
     );
   }
 }

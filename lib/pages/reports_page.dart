@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/pages/reports/report_ct.dart';
+import 'package:my_app_3/pages/reports/report_expense_tag_tracking_list.dart';
 
 class ReportsPage extends StatelessWidget {
   static const String title = 'Reports';
@@ -20,6 +21,14 @@ class ReportsPage extends StatelessWidget {
             'How much money you spent (costs), by each tag in a month. An expense with two tags will be count twice.',
             onTap: () => Navigator.of(context).pushNamed(ReportCt.route),
           ),
+
+          Divider(height: 1,),
+
+          _ReportItem(
+            'Expense tag tracking reports',
+            'Track expenses by tags. You can pin a tracking report to the home screen.',
+            onTap: () => Navigator.of(context).pushNamed(ReportExpenseTagTrackingList.route),
+          )
         ],
       )
     );

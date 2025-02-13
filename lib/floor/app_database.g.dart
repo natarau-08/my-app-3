@@ -80,13 +80,15 @@ class _$AppDatabase extends AppDatabase {
 
   ScheduledExpenseDao? _scheduledExpenseDaoInstance;
 
+  TagTrackingDao? _tagTrackingDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 1,
+      version: 2,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -114,6 +116,8 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `scheduled_expense_tags` (`tag_id` INTEGER, `scheduled_expense_id` INTEGER, PRIMARY KEY (`tag_id`, `scheduled_expense_id`))');
         await database.execute(
+            'CREATE TABLE IF NOT EXISTS `tag_tracking` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `tag_id` INTEGER NOT NULL, `starting_date` TEXT NOT NULL, `pinned` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `created_date` TEXT NOT NULL)');
+        await database.execute(
             'CREATE UNIQUE INDEX `index_tags_name` ON `tags` (`name`)');
         await database.execute(
             'CREATE INDEX `index_expense_tags_tag_id` ON `expense_tags` (`tag_id`)');
@@ -123,6 +127,8 @@ class _$AppDatabase extends AppDatabase {
             'CREATE INDEX `index_scheduled_expense_tags_tag_id` ON `scheduled_expense_tags` (`tag_id`)');
         await database.execute(
             'CREATE INDEX `index_scheduled_expense_tags_scheduled_expense_id` ON `scheduled_expense_tags` (`scheduled_expense_id`)');
+        await database.execute(
+            'CREATE UNIQUE INDEX `index_tag_tracking_name` ON `tag_tracking` (`name`)');
         await database.execute(
             'CREATE VIEW IF NOT EXISTS `vw_expense_list` AS select\n  e.id,\n  e.created_date,\n  e.value,\n  e.details,\n  e.generated,\n\n  count(et.tag_id) as total_tags,\n  min(t.name) as first_tag,\n\n  CAST(strftime(\'%Y\', created_date) as INTEGER) as year,\n  CAST(strftime(\'%m\', created_date) as INTEGER) as month\nfrom expenses e\nleft join expense_tags et on et.expense_id = e.id\nleft join tags t on t.id = et.tag_id\ngroup by e.id, e.created_date, e.value, e.details, e.generated\norder by e.created_date\n');
         await database.execute(
@@ -156,6 +162,12 @@ class _$AppDatabase extends AppDatabase {
   ScheduledExpenseDao get scheduledExpenseDao {
     return _scheduledExpenseDaoInstance ??=
         _$ScheduledExpenseDao(database, changeListener);
+  }
+
+  @override
+  TagTrackingDao get tagTrackingDao {
+    return _tagTrackingDaoInstance ??=
+        _$TagTrackingDao(database, changeListener);
   }
 }
 
@@ -681,6 +693,98 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
             .saveScheduledExpense(data, tags);
       });
     }
+  }
+}
+
+class _$TagTrackingDao extends TagTrackingDao {
+  _$TagTrackingDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _tagTrackingInsertionAdapter = InsertionAdapter(
+            database,
+            'tag_tracking',
+            (TagTracking item) => <String, Object?>{
+                  'id': item.id,
+                  'tag_id': item.tagId,
+                  'starting_date': _dateTimeTc2.encode(item.startingDate),
+                  'pinned': item.pinned ? 1 : 0,
+                  'name': item.name,
+                  'description': item.description,
+                  'created_date': _dateTimeTc2.encode(item.createdDate)
+                },
+            changeListener),
+        _tagTrackingUpdateAdapter = UpdateAdapter(
+            database,
+            'tag_tracking',
+            ['id'],
+            (TagTracking item) => <String, Object?>{
+                  'id': item.id,
+                  'tag_id': item.tagId,
+                  'starting_date': _dateTimeTc2.encode(item.startingDate),
+                  'pinned': item.pinned ? 1 : 0,
+                  'name': item.name,
+                  'description': item.description,
+                  'created_date': _dateTimeTc2.encode(item.createdDate)
+                },
+            changeListener),
+        _tagTrackingDeletionAdapter = DeletionAdapter(
+            database,
+            'tag_tracking',
+            ['id'],
+            (TagTracking item) => <String, Object?>{
+                  'id': item.id,
+                  'tag_id': item.tagId,
+                  'starting_date': _dateTimeTc2.encode(item.startingDate),
+                  'pinned': item.pinned ? 1 : 0,
+                  'name': item.name,
+                  'description': item.description,
+                  'created_date': _dateTimeTc2.encode(item.createdDate)
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<TagTracking> _tagTrackingInsertionAdapter;
+
+  final UpdateAdapter<TagTracking> _tagTrackingUpdateAdapter;
+
+  final DeletionAdapter<TagTracking> _tagTrackingDeletionAdapter;
+
+  @override
+  Stream<List<TagTracking>> streamAllTagTrackings() {
+    return _queryAdapter.queryListStream(
+        'select * from tag_tracking order by id',
+        mapper: (Map<String, Object?> row) => TagTracking(
+            id: row['id'] as int?,
+            tagId: row['tag_id'] as int,
+            startingDate: _dateTimeTc2.decode(row['starting_date'] as String),
+            pinned: (row['pinned'] as int) != 0,
+            name: row['name'] as String,
+            description: row['description'] as String,
+            createdDate: _dateTimeTc2.decode(row['created_date'] as String)),
+        queryableName: 'tag_tracking',
+        isView: false);
+  }
+
+  @override
+  Future<int> insert(TagTracking e) {
+    return _tagTrackingInsertionAdapter.insertAndReturnId(
+        e, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> update(TagTracking e) async {
+    await _tagTrackingUpdateAdapter.update(e, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> deleteTagTracking(TagTracking e) async {
+    await _tagTrackingDeletionAdapter.delete(e);
   }
 }
 
