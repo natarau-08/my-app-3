@@ -10,8 +10,6 @@ import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
 import 'package:my_app_3/pages/settings_page.dart';
 import 'package:my_app_3/utils.dart';
-import 'package:path/path.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../floor/app_database.dart';
 import '../floor/tables/expense.dart';
