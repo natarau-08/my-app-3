@@ -89,8 +89,6 @@ abstract class AppDatabase extends FloorDatabase {
     }else{
       throw 'Error while finding database file.';
     }
-
-    await initialize();
   }
 }
 

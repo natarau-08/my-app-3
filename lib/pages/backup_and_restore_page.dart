@@ -1,14 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
 import 'package:my_app_3/pages/settings_page.dart';
 import 'package:my_app_3/utils.dart';
+import 'package:path/path.dart';
 
 import '../floor/app_database.dart';
 import '../floor/tables/expense.dart';
@@ -18,7 +20,6 @@ import '../floor/tables/tag.dart';
 class BackupAndRestorePage extends StatefulWidget {
   static const String title = 'Backup or restore data';
   static const String route = '${SettingsPage.route}/export-to-file';
-  static const methodChannel = MethodChannel('backup');
 
   const BackupAndRestorePage({super.key});
 
@@ -97,70 +98,101 @@ class _BackupAndRestorePageState extends State<BackupAndRestorePage> {
       final df = DateFormat('yyyy-MM-dd-HHmmss');
       final part = df.format(DateTime.now());
       final exportFileName = 'my-app-backup-$part.zip';
-      final String? path = await BackupAndRestorePage.methodChannel.invokeMethod('saveFile', exportFileName);
+      
+      final dbFile = File(AppDatabase.dbPath);
+      final bytes = await dbFile.readAsBytes();
 
-      throw 'Not implemented';
+      final archive = Archive()
+        ..addFile(ArchiveFile(basename(AppDatabase.dbPath), bytes.length, bytes));
 
-      // if(Platform.isAndroid){
-      //   if (!await Permission.storage.request().isGranted && !await Permission.manageExternalStorage.request().isGranted) {
-      //     setState(() {
-      //       _message = 'Permission denied. Operation canceled.';
-      //       _status = _Status.error;
-      //     });
-      //     return;
-      //   }
-      // }
+      final zipBytes = ZipEncoder().encode(archive);
 
-      // if(Platform.isAndroid){
-        // path = await FilePicker.platform.saveFile(
-        //   dialogTitle: 'Save backup file',
-        //   fileName: exportFileName
-        // );
-      // }else{
-      //   path = File(Platform.resolvedExecutable).parent.path;
-      //   path = join(path, exportFileName);
-      // }
+      String? result;
+      if(Platform.isAndroid){
+        result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save backup file',
+          fileName: exportFileName,
+          bytes: Uint8List.fromList(zipBytes)
+        );
+      }else if(Platform.isWindows){
+        result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save backup file',
+          fileName: exportFileName
+        );
 
-      // if(path == null){
-      //   setState(() {
-      //     _message = 'No file selected. Operation canceled.';
-      //     _status = _Status.idle;
-      //   });
-      //   return;
-      // }
+        if(result != null){
+          final zipFile = File(result);
+          await zipFile.writeAsBytes(zipBytes);
+        }
+      }else{
+        throw 'Not implemented for this platform';
+      }
 
-      // final dbFile = File(AppDatabase.dbPath);
-      // final bytes = await dbFile.readAsBytes();
-
-      // final archive = Archive()
-      //   ..addFile(ArchiveFile(basename(AppDatabase.dbPath), bytes.length, bytes));
-
-      // final zipBytes = ZipEncoder().encode(archive);
-
-      // final zipFile = File(path);
-      // await zipFile.writeAsBytes(zipBytes);
-
-      // setState(() {
-      //   _message = 'Database backup completed!';
-      //   _status = _Status.doneProcessing;
-      // });
-
+      if(result == null){
+        throw 'Operation canceled';
+      }
     }catch(ex){
       setState(() {
         _message = ex.toString();
         _status = _Status.error;
       });
     }
+
+    setState(() {
+      _message = 'Backup done!';
+      _status = _Status.doneProcessing;
+    });
   }
 
   void _restoreDatabase(BuildContext context) async {
+    if(!await Utils.confirm(context, 'Are you sure?', 'Restoring the database will delete all current data.')){
+      return;
+    }
+
     setState(() {
       _status = _Status.processing;
       _message = 'Restore database in progress...';
     });
 
     try{
-      throw 'Not implemented';
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        dialogTitle: 'Pick archive file',
+        type: FileType.any,
+      );
+
+      if(result == null || result.files.isEmpty){
+        throw 'No file chose. Operation canceled.';
+      }
+
+      final filePath = result.files.first.path;
+      if(filePath == null){
+        throw Exception('Failed to retrieve file path.');
+      }
+
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+
+      final archive = ZipDecoder().decodeBytes(bytes);
+      if(archive.length != 1){
+        throw 'Invalid archive';
+      }
+
+      final dbFile = File(AppDatabase.dbPath);
+      
+      // nuke the database
+      await AppDatabase.nukeDatabase();
+
+      // write the new database
+      await dbFile.writeAsBytes(archive.first.content);
+
+      // initialize database
+      await AppDatabase.initialize();
+
+      setState(() {
+        _message = 'Database restored successfully!';
+        _status = _Status.doneProcessing;
+      });
     }catch(ex){
       setState(() {
         _message = ex.toString();
@@ -207,6 +239,7 @@ class _BackupAndRestorePageState extends State<BackupAndRestorePage> {
       });
 
       await AppDatabase.nukeDatabase();
+      await AppDatabase.initialize();
 
       setState(() {
         _message = 'Saving tags...';
