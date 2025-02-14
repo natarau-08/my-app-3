@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app_3/app_secondary_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
@@ -20,6 +21,7 @@ import '../floor/tables/tag.dart';
 class BackupAndRestorePage extends StatefulWidget {
   static const String title = 'Backup or restore data';
   static const String route = '${SettingsPage.route}/export-to-file';
+  static const methodChannel = MethodChannel('com.example.my_app_3/backup');
 
   const BackupAndRestorePage({super.key});
 
@@ -98,51 +100,53 @@ class _BackupAndRestorePageState extends State<BackupAndRestorePage> {
       final df = DateFormat('yyyy-MM-dd-HHmmss');
       final part = df.format(DateTime.now());
       final exportFileName = 'my-app-backup-$part.zip';
-      String? path;
+      final String? path = await BackupAndRestorePage.methodChannel.invokeMethod('saveFile', exportFileName);
 
-      if(Platform.isAndroid){
-        if (!await Permission.storage.request().isGranted && !await Permission.manageExternalStorage.request().isGranted) {
-          setState(() {
-            _message = 'Permission denied. Operation canceled.';
-            _status = _Status.error;
-          });
-          return;
-        }
-      }
+      throw 'Not implemented';
 
       // if(Platform.isAndroid){
-        path = await FilePicker.platform.saveFile(
-          dialogTitle: 'Save backup file',
-          fileName: exportFileName
-        );
+      //   if (!await Permission.storage.request().isGranted && !await Permission.manageExternalStorage.request().isGranted) {
+      //     setState(() {
+      //       _message = 'Permission denied. Operation canceled.';
+      //       _status = _Status.error;
+      //     });
+      //     return;
+      //   }
+      // }
+
+      // if(Platform.isAndroid){
+        // path = await FilePicker.platform.saveFile(
+        //   dialogTitle: 'Save backup file',
+        //   fileName: exportFileName
+        // );
       // }else{
       //   path = File(Platform.resolvedExecutable).parent.path;
       //   path = join(path, exportFileName);
       // }
 
-      if(path == null){
-        setState(() {
-          _message = 'No file selected. Operation canceled.';
-          _status = _Status.idle;
-        });
-        return;
-      }
+      // if(path == null){
+      //   setState(() {
+      //     _message = 'No file selected. Operation canceled.';
+      //     _status = _Status.idle;
+      //   });
+      //   return;
+      // }
 
-      final dbFile = File(AppDatabase.dbPath);
-      final bytes = await dbFile.readAsBytes();
+      // final dbFile = File(AppDatabase.dbPath);
+      // final bytes = await dbFile.readAsBytes();
 
-      final archive = Archive()
-        ..addFile(ArchiveFile(basename(AppDatabase.dbPath), bytes.length, bytes));
+      // final archive = Archive()
+      //   ..addFile(ArchiveFile(basename(AppDatabase.dbPath), bytes.length, bytes));
 
-      final zipBytes = ZipEncoder().encode(archive);
+      // final zipBytes = ZipEncoder().encode(archive);
 
-      final zipFile = File(path);
-      await zipFile.writeAsBytes(zipBytes);
+      // final zipFile = File(path);
+      // await zipFile.writeAsBytes(zipBytes);
 
-      setState(() {
-        _message = 'Database backup completed!';
-        _status = _Status.doneProcessing;
-      });
+      // setState(() {
+      //   _message = 'Database backup completed!';
+      //   _status = _Status.doneProcessing;
+      // });
 
     }catch(ex){
       setState(() {

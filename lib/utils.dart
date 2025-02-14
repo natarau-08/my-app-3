@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'global_keys.dart';
 
 sealed class Utils {
+
   static Future<void> showMessage(String message, Color? backgroundColor, Color? textColor) async {
     while(GlobalKeys.scaffoldMessengerKey.currentState == null) {
       await Future.delayed(const Duration(seconds: 1));
