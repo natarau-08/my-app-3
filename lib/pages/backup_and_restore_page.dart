@@ -21,7 +21,7 @@ import '../floor/tables/tag.dart';
 class BackupAndRestorePage extends StatefulWidget {
   static const String title = 'Backup or restore data';
   static const String route = '${SettingsPage.route}/export-to-file';
-  static const methodChannel = MethodChannel('com.example.my_app_3/backup');
+  static const methodChannel = MethodChannel('backup');
 
   const BackupAndRestorePage({super.key});
 
