@@ -79,6 +79,11 @@ sealed class Utils {
     return formatter.format(dt);
   }
 
+  static String formatDate(DateTime dt){
+    final formatter = DateFormat('dd/MM/yyyy');
+    return formatter.format(dt);
+  }
+
   static DateTime addMonths(DateTime originalDate, int monthsToAdd) {
     // Calculate the new year and month
     int newYear = originalDate.year + ((originalDate.month + monthsToAdd - 1) ~/ 12);
