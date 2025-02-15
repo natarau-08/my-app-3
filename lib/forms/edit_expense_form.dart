@@ -278,10 +278,12 @@ class _TagDialogState extends State<_TagDialog> {
                   itemBuilder: (context, index){
                     final tag = tags[index];
                     return ListTile(
-                      title: Row(
+                      title: Text(tag.name),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: 8,
                         children: [
-                          Expanded(child: Text(tag.name)),
-
+                          if(tag.color != null) Icon(Icons.circle, color: tag.color,),
                           if(_selectMany)
                             Checkbox(
                               value: _selectedTags.contains(tag),
@@ -295,10 +297,8 @@ class _TagDialogState extends State<_TagDialog> {
                                 });
                               }
                             )
-
                         ],
                       ),
-                      trailing: tag.color == null ? null : Icon(Icons.circle, color: tag.color,),
                       onTap: (){
                         if(_selectMany){
                           setState(() {
