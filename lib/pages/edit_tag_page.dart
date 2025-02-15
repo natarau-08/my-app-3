@@ -191,17 +191,19 @@ class _EditTagPageState extends State<EditTagPage> {
         deleted: false
       );
 
+      late int id;
       if(_tag != null){
+        id = _tag!.id!;
         await db.tagDao.update(c);
       }else{
-        await db.tagDao.insertTag(c);
+        id = await db.tagDao.insertTag(c);
       }
 
       Utils.infoMessage('$tagName tag saved.');
 
       if(context.mounted){
         // ignore: use_build_context_synchronously
-        Navigator.pop(context);
+        Navigator.pop(context, await db.tagDao.findById(id));
       }
     }catch(ex){
       if(context.mounted){

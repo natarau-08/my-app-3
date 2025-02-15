@@ -529,6 +529,20 @@ class _$TagDao extends TagDao {
   }
 
   @override
+  Future<Tag?> findById(int id) async {
+    return _queryAdapter.query('select * from tags where id = ?1',
+        mapper: (Map<String, Object?> row) => Tag(
+            id: row['id'] as int?,
+            name: row['name'] as String,
+            description: row['description'] as String?,
+            color: _colorTcN.decode(row['color'] as String?),
+            added: _dateTimeTc2.decode(row['added_time'] as String),
+            deleted: (row['deleted'] as int) != 0,
+            lastUsed: _dateTimeTc.decode(row['last_used'] as String?)),
+        arguments: [id]);
+  }
+
+  @override
   Future<int> insertTag(Tag e) {
     return _tagInsertionAdapter.insertAndReturnId(e, OnConflictStrategy.abort);
   }

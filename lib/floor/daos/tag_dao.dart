@@ -33,4 +33,7 @@ abstract class TagDao {
 
   @Query('select id from tags where name = :name')
   Future<int?> getTagIdByName(String name);
+
+  @Query('select * from tags where id = :id')
+  Future<Tag?> findById(int id);
 }

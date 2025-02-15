@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
+import 'package:my_app_3/pages/edit_tag_page.dart';
 
 import '../controls/form_separator.dart';
 import '../floor/app_database.dart';
@@ -132,23 +133,19 @@ class _EditExpenseFormState extends State<EditExpenseForm> {
                 OutlinedButton(
                   onPressed: () async {
                     FocusScope.of(context).unfocus();
-                    final tag = await showDialog<Tag>(
+                    final tags = await showDialog<List<Tag>>(
                         context: context,
                         builder: (context) => _TagDialog(_tags)
                     );
                     
-                    if(tag != null && context.mounted) {
-                      if(_tags.any((t) => t.id == tag.id)) {
-                        ScaffoldMessenger
-                            .of(context)
-                            .showSnackBar(
-                            SnackBar(content: Text('${tag.name} already added.'))
-                        );
-                      } else {
-                        setState(() {
-                          _tags.add(tag);
-                        });
-                      }
+                    if(tags != null && context.mounted){
+                      setState(() {
+                        for(final t in tags){
+                          if(!_tags.any((at) => at.id == t.id)){
+                            _tags.add(t);
+                          }
+                        }
+                      });
                     }
                   },
                   child: Text('Add tag'),
@@ -245,6 +242,8 @@ class _TagDialog extends StatefulWidget {
 
 class _TagDialogState extends State<_TagDialog> {
   final _tagsFuture = AppDatabase.instance.tagDao.getActiveTags();
+  final _selectedTags = <Tag>{};
+  bool _selectMany = false;
 
   @override
   Widget build(BuildContext context) {
@@ -279,15 +278,90 @@ class _TagDialogState extends State<_TagDialog> {
                   itemBuilder: (context, index){
                     final tag = tags[index];
                     return ListTile(
-                      title: Text(tag.name),
+                      title: Row(
+                        children: [
+                          Expanded(child: Text(tag.name)),
+
+                          if(_selectMany)
+                            Checkbox(
+                              value: _selectedTags.contains(tag),
+                              onChanged: (value){
+                                setState(() {
+                                  if(_selectedTags.contains(tag)){
+                                    _selectedTags.remove(tag);
+                                  }else{
+                                    _selectedTags.add(tag);
+                                  }
+                                });
+                              }
+                            )
+
+                        ],
+                      ),
                       trailing: tag.color == null ? null : Icon(Icons.circle, color: tag.color,),
-                      onTap: () => Navigator.of(context).pop(tag),
+                      onTap: (){
+                        if(_selectMany){
+                          setState(() {
+                            if(_selectedTags.contains(tag)){
+                              _selectedTags.remove(tag);
+                            }else{
+                              _selectedTags.add(tag);
+                            }
+                          });
+                        }else{
+                          Navigator.of(context).pop([tag]);
+                        }
+                      },
+                      onLongPress: () {
+                        if(!_selectMany){
+                          setState(() {
+                            _selectMany = true;
+                            _selectedTags.add(tag);
+                          });
+                        }
+                      },
                     );
                   },
                 );
               },
             ),
           ),
+          Divider(height: 0.5,),
+
+          if(_selectMany) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 20,
+              children: [
+                TextButton(
+                  onPressed: (){
+                    setState(() {
+                      _selectMany = false;
+                      _selectedTags.clear();
+                    });
+                  },
+                  child: const Text('Cancel selection'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final tags = _selectedTags.toList();
+                    Navigator.of(context).pop(tags);
+                  },
+                  child: const Text('Add selected'),
+                )
+              ],
+            )
+          ]
+          else
+            TextButton(
+              onPressed: () async {
+                final tag = await Navigator.of(context).pushNamed(EditTagPage.route);
+                if(tag != null && context.mounted){
+                    Navigator.of(context).pop(tag);
+                }
+              },
+              child: const Text('Create new tag'),
+            )
         ],
       ),
     );
