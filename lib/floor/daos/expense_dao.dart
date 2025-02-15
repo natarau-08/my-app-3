@@ -68,14 +68,17 @@ where et.expense_id = :id""")
 
   Stream<List<dynamic>> streamExpensesAndSummaries(int months) async* {
     final ympairs = await getMonths(months);
+    final data = [];
 
     for(var m in ympairs.reversed){
-      yield await getExpensesByYearAndMonth(m.year, m.month);
+      data.addAll(await getExpensesByYearAndMonth(m.year, m.month));
       final summary = await getMonthSummary(m.year, m.month);
       if(summary != null) {
-        yield [summary];
+        data.add(summary);
       }
     }
+
+    yield data.reversed.toList();
   }
 
   @Query('select * from expenses where id=:id')

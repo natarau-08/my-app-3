@@ -25,7 +25,7 @@ class ReportsPage extends StatelessWidget {
           Divider(height: 1,),
 
           _ReportItem(
-            'Expense tag tracking reports',
+            'Expense tag tracking reports (WIP)',
             'Track expenses by tags. You can pin a tracking report to the home screen.',
             onTap: () => Navigator.of(context).pushNamed(ReportExpenseTagTrackingList.route),
           )

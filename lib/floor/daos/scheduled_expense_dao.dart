@@ -104,7 +104,6 @@ abstract class ScheduledExpenseDao {
 
     if(c > 0){
       Utils.infoMessage('Scheduled expenses: Generated $c expenses.');
-      ExpenseListPage.onExpensesChangedCallback?.call();
     }
   }
 
