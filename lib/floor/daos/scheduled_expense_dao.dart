@@ -5,8 +5,6 @@ import 'package:my_app_3/floor/tables/expense.dart';
 import 'package:my_app_3/floor/tables/scheduled_expense.dart';
 import 'package:my_app_3/floor/tables/scheduled_expense_tag.dart';
 import 'package:my_app_3/floor/tables/tag.dart';
-
-import '../../pages/expense_list_page.dart';
 import '../../utils.dart';
 
 @dao

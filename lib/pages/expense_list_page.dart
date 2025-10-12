@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
