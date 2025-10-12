@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/pages/reports/report_ct.dart';
-import 'package:my_app_3/pages/reports/report_expense_tag_tracking_list.dart';
 
 class ReportsPage extends StatelessWidget {
   static const String title = 'Reports';
@@ -22,13 +21,7 @@ class ReportsPage extends StatelessWidget {
             onTap: () => Navigator.of(context).pushNamed(ReportCt.route),
           ),
 
-          Divider(height: 1,),
-
-          _ReportItem(
-            'Expense tag tracking reports (WIP)',
-            'Track expenses by tags. You can pin a tracking report to the home screen.',
-            onTap: () => Navigator.of(context).pushNamed(ReportExpenseTagTrackingList.route),
-          )
+          Divider(height: 1,)
         ],
       )
     );

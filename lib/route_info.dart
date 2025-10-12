@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:my_app_3/pages/add_expense_page.dart';
+import 'package:my_app_3/pages/car_page.dart';
 import 'package:my_app_3/pages/deleted_tags_page.dart';
 import 'package:my_app_3/pages/edit_expense_page.dart';
 import 'package:my_app_3/pages/backup_and_restore_page.dart';
 import 'package:my_app_3/pages/edit_scheduled_expense_page.dart';
 import 'package:my_app_3/pages/home_page.dart';
 import 'package:my_app_3/pages/reports/report_ct.dart';
-import 'package:my_app_3/pages/reports/report_expense_tag_tracking_edit.dart';
-import 'package:my_app_3/pages/reports/report_expense_tag_tracking_list.dart';
 import 'package:my_app_3/pages/reports_page.dart';
 import 'package:my_app_3/pages/scheduled_expenses_page.dart';
 import 'package:my_app_3/pages/settings_page.dart';
@@ -25,6 +24,7 @@ class RouteInfo {
     RouteInfo(TagsPage.title, TagsPage.route, (context) => const TagsPage(), menuIcon: const Icon(Icons.tag, color: Constants.colorBlue,)),
     RouteInfo(ExpenseListPage.title, ExpenseListPage.route, (context) => const ExpenseListPage(), menuIcon: const Icon(Icons.list)),
     RouteInfo(ReportsPage.title, ReportsPage.route, (context) => const ReportsPage(), menuIcon: const Icon(Icons.auto_graph, color: Constants.colorBlue,)),
+    RouteInfo(CarPage.title, CarPage.route, (context) => const CarPage(), menuIcon: const Icon(Icons.directions_car, color: Colors.green,)),
 
     // other routes: title is null => they do not appear in the main menu
     RouteInfo(null, EditTagPage.route, (context) => const EditTagPage()),
@@ -35,8 +35,6 @@ class RouteInfo {
     RouteInfo(null, ScheduledExpensesPage.route, (context) => const ScheduledExpensesPage()),
     RouteInfo(null, EditScheduledExpensePage.route, (context) => const EditScheduledExpensePage()),
     RouteInfo(null, ReportCt.route, (context) => const ReportCt()),
-    RouteInfo(null, ReportExpenseTagTrackingList.route, (context) => const ReportExpenseTagTrackingList()),
-    RouteInfo(null, ReportExpenseTagTrackingEdit.route, (context) => const ReportExpenseTagTrackingEdit()),
   ];
 
   static final routeMenuList = routeList.where((x) => x.title != null);

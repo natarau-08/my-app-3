@@ -5,20 +5,25 @@ import 'dart:io';
 import 'package:floor/floor.dart';
 import 'package:my_app_3/app_assets.dart';
 import 'package:my_app_3/floor/daos/app_settings_dao.dart';
+import 'package:my_app_3/floor/daos/car_dao.dart';
+import 'package:my_app_3/floor/daos/car_repair_dao.dart';
+import 'package:my_app_3/floor/daos/car_revision_dao.dart';
+import 'package:my_app_3/floor/tables/car.dart';
+import 'package:my_app_3/floor/tables/car_repair.dart';
+import 'package:my_app_3/floor/tables/car_revision.dart';
+import 'package:my_app_3/floor/tables/car_revision_type.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 import 'daos/expense_dao.dart';
 import 'daos/scheduled_expense_dao.dart';
 import 'daos/tag_dao.dart';
-import 'daos/tag_tracking_dao.dart';
 import 'tables/app_settings.dart';
 import 'tables/expense.dart';
 import 'tables/expense_tag.dart';
 import 'tables/scheduled_expense.dart';
 import 'tables/scheduled_expense_tag.dart';
 import 'tables/tag.dart';
-import 'tables/tag_tracking.dart';
 import 'type_converters/color_tc.dart';
 import 'type_converters/date_time_tc.dart';
 import 'views/expense_list_view.dart';
@@ -28,7 +33,7 @@ import 'views/expense_months_view.dart';
 part 'app_database.g.dart';
 
 @Database(
-  version: 2,
+  version: 3,
   entities: [
     AppSettings,
     Expense,
@@ -36,7 +41,11 @@ part 'app_database.g.dart';
     ExpenseTag,
     ScheduledExpense,
     ScheduledExpenseTag,
-    TagTracking,
+
+    Car,
+    CarRevisionType,
+    CarRevision,
+    CarRepair,
   ],
   views: [
     ExpenseListView,
@@ -55,7 +64,10 @@ abstract class AppDatabase extends FloorDatabase {
   ExpenseDao get expenseDao;
   TagDao get tagDao;
   ScheduledExpenseDao get scheduledExpenseDao;
-  TagTrackingDao get tagTrackingDao;
+
+  CarDao get carDao;
+  CarRevisionDao get carRevisionDao;
+  CarRepairDao get carRepairDao;
 
   static Future<void> initialize() async {
     String dbName = dbFileName;
@@ -77,6 +89,7 @@ abstract class AppDatabase extends FloorDatabase {
       ))
       .addMigrations([
         await AppAssets.loadMigration(1, 2),
+        await AppAssets.loadMigration(2, 3),
       ])
       .build();
   }

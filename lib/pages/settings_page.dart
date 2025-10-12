@@ -33,13 +33,13 @@ class _SettingsPageState extends State<SettingsPage> {
     _options = [
       const DropdownMenuEntry(
         value: null,
-        label: 'Restore last page'
+        label: 'Open last page'
       ),
 
       for(var ri in RouteInfo.routeMenuList)
         DropdownMenuEntry(
           value: ri,
-          label: 'Restore ${ri.title}',
+          label: 'Open ${ri.title}',
           trailingIcon: ri.menuIcon
         ),
     ];

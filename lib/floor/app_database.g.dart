@@ -80,7 +80,11 @@ class _$AppDatabase extends AppDatabase {
 
   ScheduledExpenseDao? _scheduledExpenseDaoInstance;
 
-  TagTrackingDao? _tagTrackingDaoInstance;
+  CarDao? _carDaoInstance;
+
+  CarRevisionDao? _carRevisionDaoInstance;
+
+  CarRepairDao? _carRepairDaoInstance;
 
   Future<sqflite.Database> open(
     String path,
@@ -88,7 +92,7 @@ class _$AppDatabase extends AppDatabase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 2,
+      version: 3,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -116,7 +120,13 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `scheduled_expense_tags` (`tag_id` INTEGER, `scheduled_expense_id` INTEGER, PRIMARY KEY (`tag_id`, `scheduled_expense_id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `tag_tracking` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `tag_id` INTEGER NOT NULL, `starting_date` TEXT NOT NULL, `pinned` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `created_date` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `cars` (`id` INTEGER, `brand` TEXT NOT NULL, `model` TEXT NOT NULL, `year` INTEGER NOT NULL, `odometer` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `car_revision_types` (`id` INTEGER, `name` TEXT, `interval_km` INTEGER, `interval_months` INTEGER, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `car_revisions` (`id` INTEGER, `car_id` INTEGER, `revision_type_id` INTEGER, `date` TEXT, `odometer` INTEGER, FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY (`revision_type_id`) REFERENCES `car_revision_types` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `car_repairs` (`id` INTEGER, `car_id` INTEGER, `date` TEXT, `description` TEXT, `cost` REAL, FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE UNIQUE INDEX `index_tags_name` ON `tags` (`name`)');
         await database.execute(
@@ -127,8 +137,19 @@ class _$AppDatabase extends AppDatabase {
             'CREATE INDEX `index_scheduled_expense_tags_tag_id` ON `scheduled_expense_tags` (`tag_id`)');
         await database.execute(
             'CREATE INDEX `index_scheduled_expense_tags_scheduled_expense_id` ON `scheduled_expense_tags` (`scheduled_expense_id`)');
+        await database.execute('CREATE INDEX `index_cars_id` ON `cars` (`id`)');
         await database.execute(
-            'CREATE UNIQUE INDEX `index_tag_tracking_name` ON `tag_tracking` (`name`)');
+            'CREATE INDEX `index_car_revision_types_id` ON `car_revision_types` (`id`)');
+        await database.execute(
+            'CREATE INDEX `index_car_revisions_id` ON `car_revisions` (`id`)');
+        await database.execute(
+            'CREATE INDEX `index_car_revisions_car_id` ON `car_revisions` (`car_id`)');
+        await database.execute(
+            'CREATE INDEX `index_car_revisions_revision_type_id` ON `car_revisions` (`revision_type_id`)');
+        await database.execute(
+            'CREATE INDEX `index_car_repairs_id` ON `car_repairs` (`id`)');
+        await database.execute(
+            'CREATE INDEX `index_car_repairs_car_id` ON `car_repairs` (`car_id`)');
         await database.execute(
             'CREATE VIEW IF NOT EXISTS `vw_expense_list` AS select\n  e.id,\n  e.created_date,\n  e.value,\n  e.details,\n  e.generated,\n\n  count(et.tag_id) as total_tags,\n  min(t.name) as first_tag,\n\n  CAST(strftime(\'%Y\', created_date) as INTEGER) as year,\n  CAST(strftime(\'%m\', created_date) as INTEGER) as month\nfrom expenses e\nleft join expense_tags et on et.expense_id = e.id\nleft join tags t on t.id = et.tag_id\ngroup by e.id, e.created_date, e.value, e.details, e.generated\norder by e.created_date\n');
         await database.execute(
@@ -165,9 +186,19 @@ class _$AppDatabase extends AppDatabase {
   }
 
   @override
-  TagTrackingDao get tagTrackingDao {
-    return _tagTrackingDaoInstance ??=
-        _$TagTrackingDao(database, changeListener);
+  CarDao get carDao {
+    return _carDaoInstance ??= _$CarDao(database, changeListener);
+  }
+
+  @override
+  CarRevisionDao get carRevisionDao {
+    return _carRevisionDaoInstance ??=
+        _$CarRevisionDao(database, changeListener);
+  }
+
+  @override
+  CarRepairDao get carRepairDao {
+    return _carRepairDaoInstance ??= _$CarRepairDao(database, changeListener);
   }
 }
 
@@ -710,50 +741,44 @@ class _$ScheduledExpenseDao extends ScheduledExpenseDao {
   }
 }
 
-class _$TagTrackingDao extends TagTrackingDao {
-  _$TagTrackingDao(
+class _$CarDao extends CarDao {
+  _$CarDao(
     this.database,
     this.changeListener,
   )   : _queryAdapter = QueryAdapter(database, changeListener),
-        _tagTrackingInsertionAdapter = InsertionAdapter(
+        _carInsertionAdapter = InsertionAdapter(
             database,
-            'tag_tracking',
-            (TagTracking item) => <String, Object?>{
+            'cars',
+            (Car item) => <String, Object?>{
                   'id': item.id,
-                  'tag_id': item.tagId,
-                  'starting_date': _dateTimeTc2.encode(item.startingDate),
-                  'pinned': item.pinned ? 1 : 0,
-                  'name': item.name,
-                  'description': item.description,
-                  'created_date': _dateTimeTc2.encode(item.createdDate)
+                  'brand': item.brand,
+                  'model': item.model,
+                  'year': item.year,
+                  'odometer': item.odometer
                 },
             changeListener),
-        _tagTrackingUpdateAdapter = UpdateAdapter(
+        _carUpdateAdapter = UpdateAdapter(
             database,
-            'tag_tracking',
+            'cars',
             ['id'],
-            (TagTracking item) => <String, Object?>{
+            (Car item) => <String, Object?>{
                   'id': item.id,
-                  'tag_id': item.tagId,
-                  'starting_date': _dateTimeTc2.encode(item.startingDate),
-                  'pinned': item.pinned ? 1 : 0,
-                  'name': item.name,
-                  'description': item.description,
-                  'created_date': _dateTimeTc2.encode(item.createdDate)
+                  'brand': item.brand,
+                  'model': item.model,
+                  'year': item.year,
+                  'odometer': item.odometer
                 },
             changeListener),
-        _tagTrackingDeletionAdapter = DeletionAdapter(
+        _carDeletionAdapter = DeletionAdapter(
             database,
-            'tag_tracking',
+            'cars',
             ['id'],
-            (TagTracking item) => <String, Object?>{
+            (Car item) => <String, Object?>{
                   'id': item.id,
-                  'tag_id': item.tagId,
-                  'starting_date': _dateTimeTc2.encode(item.startingDate),
-                  'pinned': item.pinned ? 1 : 0,
-                  'name': item.name,
-                  'description': item.description,
-                  'created_date': _dateTimeTc2.encode(item.createdDate)
+                  'brand': item.brand,
+                  'model': item.model,
+                  'year': item.year,
+                  'odometer': item.odometer
                 },
             changeListener);
 
@@ -763,43 +788,63 @@ class _$TagTrackingDao extends TagTrackingDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<TagTracking> _tagTrackingInsertionAdapter;
+  final InsertionAdapter<Car> _carInsertionAdapter;
 
-  final UpdateAdapter<TagTracking> _tagTrackingUpdateAdapter;
+  final UpdateAdapter<Car> _carUpdateAdapter;
 
-  final DeletionAdapter<TagTracking> _tagTrackingDeletionAdapter;
+  final DeletionAdapter<Car> _carDeletionAdapter;
 
   @override
-  Stream<List<TagTracking>> streamAllTagTrackings() {
-    return _queryAdapter.queryListStream(
-        'select * from tag_tracking order by id',
-        mapper: (Map<String, Object?> row) => TagTracking(
+  Stream<List<Car>> findAllCars() {
+    return _queryAdapter.queryListStream('SELECT * FROM cars',
+        mapper: (Map<String, Object?> row) => Car(
             id: row['id'] as int?,
-            tagId: row['tag_id'] as int,
-            startingDate: _dateTimeTc2.decode(row['starting_date'] as String),
-            pinned: (row['pinned'] as int) != 0,
-            name: row['name'] as String,
-            description: row['description'] as String,
-            createdDate: _dateTimeTc2.decode(row['created_date'] as String)),
-        queryableName: 'tag_tracking',
+            brand: row['brand'] as String,
+            model: row['model'] as String,
+            year: row['year'] as int,
+            odometer: row['odometer'] as int),
+        queryableName: 'cars',
         isView: false);
   }
 
   @override
-  Future<int> insert(TagTracking e) {
-    return _tagTrackingInsertionAdapter.insertAndReturnId(
-        e, OnConflictStrategy.abort);
+  Future<int> insertCar(Car car) {
+    return _carInsertionAdapter.insertAndReturnId(
+        car, OnConflictStrategy.abort);
   }
 
   @override
-  Future<void> update(TagTracking e) async {
-    await _tagTrackingUpdateAdapter.update(e, OnConflictStrategy.abort);
+  Future<int> updateCar(Car car) {
+    return _carUpdateAdapter.updateAndReturnChangedRows(
+        car, OnConflictStrategy.abort);
   }
 
   @override
-  Future<void> deleteTagTracking(TagTracking e) async {
-    await _tagTrackingDeletionAdapter.delete(e);
+  Future<int> deleteCar(Car car) {
+    return _carDeletionAdapter.deleteAndReturnChangedRows(car);
   }
+}
+
+class _$CarRevisionDao extends CarRevisionDao {
+  _$CarRevisionDao(
+    this.database,
+    this.changeListener,
+  );
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+}
+
+class _$CarRepairDao extends CarRepairDao {
+  _$CarRepairDao(
+    this.database,
+    this.changeListener,
+  );
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
 }
 
 // ignore_for_file: unused_element

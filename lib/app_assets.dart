@@ -8,9 +8,15 @@ sealed class AppAssets {
   }
 
   static Future<Migration> loadMigration(int from, int to) async {
-    final sql = await loadSql('migrations/${from}_$to');
+    final sql = (await loadSql('migrations/${from}_$to'))
+      .split(';')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty);
+
     return Migration(from, to, (database) async {
-      await database.execute(sql);
+      for(final st in sql) {
+        await database.execute(st);
+      }
     });
   }
 }
