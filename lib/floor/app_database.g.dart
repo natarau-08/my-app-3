@@ -122,7 +122,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `cars` (`id` INTEGER, `brand` TEXT NOT NULL, `model` TEXT NOT NULL, `year` INTEGER NOT NULL, `odometer` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `car_revision_types` (`id` INTEGER, `name` TEXT, `interval_km` INTEGER, `interval_months` INTEGER, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `car_revision_types` (`id` INTEGER, `car_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `interval_km` INTEGER, `interval_months` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `car_revisions` (`id` INTEGER, `car_id` INTEGER, `revision_type_id` INTEGER, `date` TEXT, `odometer` INTEGER, FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY (`revision_type_id`) REFERENCES `car_revision_types` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
         await database.execute(
@@ -829,11 +829,86 @@ class _$CarRevisionDao extends CarRevisionDao {
   _$CarRevisionDao(
     this.database,
     this.changeListener,
-  );
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _carRevisionTypeInsertionAdapter = InsertionAdapter(
+            database,
+            'car_revision_types',
+            (CarRevisionType item) => <String, Object?>{
+                  'id': item.id,
+                  'car_id': item.carId,
+                  'name': item.name,
+                  'interval_km': item.intervalKm,
+                  'interval_months': item.intervalMonths
+                },
+            changeListener),
+        _carRevisionTypeUpdateAdapter = UpdateAdapter(
+            database,
+            'car_revision_types',
+            ['id'],
+            (CarRevisionType item) => <String, Object?>{
+                  'id': item.id,
+                  'car_id': item.carId,
+                  'name': item.name,
+                  'interval_km': item.intervalKm,
+                  'interval_months': item.intervalMonths
+                },
+            changeListener),
+        _carRevisionTypeDeletionAdapter = DeletionAdapter(
+            database,
+            'car_revision_types',
+            ['id'],
+            (CarRevisionType item) => <String, Object?>{
+                  'id': item.id,
+                  'car_id': item.carId,
+                  'name': item.name,
+                  'interval_km': item.intervalKm,
+                  'interval_months': item.intervalMonths
+                },
+            changeListener);
 
   final sqflite.DatabaseExecutor database;
 
   final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<CarRevisionType> _carRevisionTypeInsertionAdapter;
+
+  final UpdateAdapter<CarRevisionType> _carRevisionTypeUpdateAdapter;
+
+  final DeletionAdapter<CarRevisionType> _carRevisionTypeDeletionAdapter;
+
+  @override
+  Stream<List<CarRevisionType>> findRevisionTypesByCarId(int carId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM car_revision_types WHERE car_id = ?1',
+        mapper: (Map<String, Object?> row) => CarRevisionType(
+            id: row['id'] as int?,
+            name: row['name'] as String,
+            intervalKm: row['interval_km'] as int?,
+            intervalMonths: row['interval_months'] as int?,
+            carId: row['car_id'] as int),
+        arguments: [carId],
+        queryableName: 'car_revision_types',
+        isView: false);
+  }
+
+  @override
+  Future<int> insertType(CarRevisionType type) {
+    return _carRevisionTypeInsertionAdapter.insertAndReturnId(
+        type, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateType(CarRevisionType type) {
+    return _carRevisionTypeUpdateAdapter.updateAndReturnChangedRows(
+        type, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> deleteType(CarRevisionType type) {
+    return _carRevisionTypeDeletionAdapter.deleteAndReturnChangedRows(type);
+  }
 }
 
 class _$CarRepairDao extends CarRepairDao {

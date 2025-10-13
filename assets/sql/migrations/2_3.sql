@@ -10,9 +10,11 @@ create table cars (
 
 create table car_revision_types (
     id integer primary key autoincrement,
+    car_id integer not null,
     `name` text not null unique,
     interval_km integer not null,
-    interval_months integer not null
+    interval_months integer not null,
+    foreign key (car_id) references cars (id) on delete cascade
 );
 
 create table car_revisions (

@@ -4,8 +4,8 @@ import 'package:my_app_3/app_main_page.dart';
 import 'package:my_app_3/controls/centered_widgets.dart';
 import 'package:my_app_3/floor/app_database.dart';
 import 'package:my_app_3/floor/tables/car.dart';
-import 'package:my_app_3/pages/edit_car_page.dart';
-import 'package:my_app_3/utils.dart';
+import 'package:my_app_3/pages/car/edit_car_page.dart';
+import 'package:my_app_3/pages/car/service_page.dart';
 
 class CarPage extends StatefulWidget {
   static const String route = '/car';
@@ -22,7 +22,7 @@ class _CarPageState extends State<CarPage> {
 
   @override
   void initState() {
-    _stream = AppDatabase.instance.carDao.findAllCars();    
+    _stream = AppDatabase.instance.carDao.findAllCars();
     super.initState();
   }
 
@@ -31,13 +31,6 @@ class _CarPageState extends State<CarPage> {
     return AppMainPage(
       title: CarPage.title,
       actions: [
-        IconButton(
-          onPressed: () {
-            // TODO: implement settings
-            Utils.infoMessage('Not implemented yet');
-          },
-          icon: const Icon(Icons.settings)
-        ),
         IconButton(
           onPressed: (){
             _editCar();
@@ -78,7 +71,12 @@ class _CarPageState extends State<CarPage> {
                 title: Text('${item.brand} ${item.model} (${item.year})'),
                 subtitle: Text('${item.odometer}km'),
                 onTap: () {
-                  _editCar(car: item);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ServicePage(car: item)
+                    )
+                  );
                 },
               );
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_app_3/pages/add_expense_page.dart';
-import 'package:my_app_3/pages/car_page.dart';
+import 'package:my_app_3/pages/car/car_page.dart';
 import 'package:my_app_3/pages/deleted_tags_page.dart';
 import 'package:my_app_3/pages/edit_expense_page.dart';
 import 'package:my_app_3/pages/backup_and_restore_page.dart';

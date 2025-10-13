@@ -40,13 +40,13 @@ sealed class Utils {
     showMessage(message, Colors.amber[800], Colors.black);
   }
 
-  static Future<bool> confirm(BuildContext context, String title, String content) async {
+  static Future<bool> confirm(BuildContext context, String title, String? content) async {
     final r = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(title),
-          content: Text(content),
+          content: content == null ? null : Text(content),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(

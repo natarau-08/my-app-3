@@ -12,8 +12,11 @@ class CarRevisionType {
   @ColumnInfo(name: 'id')
   int? id;
 
+  @ColumnInfo(name: 'car_id')
+  int carId;
+
   @ColumnInfo(name: 'name')
-  String? name;
+  String name;
 
   @ColumnInfo(name: 'interval_km')
   int? intervalKm;
@@ -23,8 +26,9 @@ class CarRevisionType {
 
   CarRevisionType({
     this.id,
-    this.name,
+    required this.name,
     this.intervalKm,
     this.intervalMonths,
+    required this.carId
   });
 }
