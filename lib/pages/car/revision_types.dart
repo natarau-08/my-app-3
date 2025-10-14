@@ -12,8 +12,9 @@ import 'package:my_app_3/utils.dart';
 
 class RevisionTypes extends StatefulWidget {
   final Car car;
+  final Stream<List<CarRevisionType>> stream;
 
-  const RevisionTypes({super.key, required this.car});
+  const RevisionTypes(this.car, this.stream, {super.key});
 
   @override
   State<RevisionTypes> createState() => _RevisionTypesState();
@@ -23,8 +24,6 @@ class _RevisionTypesState extends State<RevisionTypes> {
   bool _open = false;
   CarRevisionType? _editing;
   final _editFormKey = GlobalKey<FormState>();
-
-  Stream<List<CarRevisionType>>? _stream;
 
   @override
   Widget build(BuildContext context) {
@@ -180,57 +179,54 @@ class _RevisionTypesState extends State<RevisionTypes> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Builder(builder: (context){
-                  _stream ??= AppDatabase.instance.carRevisionDao.findRevisionTypesByCarId(widget.car.id!);
-                  return StreamBuilder(
-                    stream: _stream,
-                    builder: (context, snapshot){
-                      final w = SimpleProgressIndicator.handleSnapshotForLoadingOrError(snapshot);
-                      if(w != null){
-                        return w;
-                      }
-                
-                      final items = snapshot.data as List<CarRevisionType>;
-                
-                      if(items.isEmpty){
-                        return NoDataAvailableCenteredWidget();
-                      }
-                
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        itemBuilder: (context, index){
-                          final item = items[index];
-                
-                          late String text;
-                          if(item.intervalKm != null && item.intervalMonths != null){
-                            text = 'Every ${item.intervalKm} km or ${item.intervalMonths} months';
-                          }
-                          else if(item.intervalKm != null){
-                            text = 'Every ${item.intervalKm} km';
-                          }
-                          else if(item.intervalMonths != null){
-                            text = 'Every ${item.intervalMonths} months';
-                          }
-                          else{
-                            text = 'No interval set';
-                          }
-                
-                          return ListTile(
-                            title: Text(item.name),
-                            subtitle: Text(text),
-                            onTap: () {
-                              setState(() {
-                                _editing = item;
-                              });
-                            },
-                          );
-                        },
-                        separatorBuilder: (context, index) => const Divider(height: 1,),
-                        itemCount: items.length,
-                      );
+                StreamBuilder(
+                  stream: widget.stream,
+                  builder: (context, snapshot){
+                    final w = SimpleProgressIndicator.handleSnapshotForLoadingOrError(snapshot);
+                    if(w != null){
+                      return w;
                     }
-                  );
-                }),
+                                
+                    final items = snapshot.data as List<CarRevisionType>;
+                                
+                    if(items.isEmpty){
+                      return NoDataAvailableCenteredWidget();
+                    }
+                                
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      itemBuilder: (context, index){
+                        final item = items[index];
+                                
+                        late String text;
+                        if(item.intervalKm != null && item.intervalMonths != null){
+                          text = 'Every ${item.intervalKm} km or ${item.intervalMonths} months';
+                        }
+                        else if(item.intervalKm != null){
+                          text = 'Every ${item.intervalKm} km';
+                        }
+                        else if(item.intervalMonths != null){
+                          text = 'Every ${item.intervalMonths} months';
+                        }
+                        else{
+                          text = 'No interval set';
+                        }
+                                
+                        return ListTile(
+                          title: Text(item.name),
+                          subtitle: Text(text),
+                          onTap: () {
+                            setState(() {
+                              _editing = item;
+                            });
+                          },
+                        );
+                      },
+                      separatorBuilder: (context, index) => const Divider(height: 1,),
+                      itemCount: items.length,
+                    );
+                  }
+                ),
 
                 const SizedBox(height: 16,),
 

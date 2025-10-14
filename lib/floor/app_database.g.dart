@@ -124,7 +124,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `car_revision_types` (`id` INTEGER, `car_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `interval_km` INTEGER, `interval_months` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `car_revisions` (`id` INTEGER, `car_id` INTEGER, `revision_type_id` INTEGER, `date` TEXT, `odometer` INTEGER, FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY (`revision_type_id`) REFERENCES `car_revision_types` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `car_revisions` (`id` INTEGER, `car_id` INTEGER NOT NULL, `revision_type_id` INTEGER NOT NULL, `date` TEXT NOT NULL, `odometer` INTEGER NOT NULL, `notes` TEXT, FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY (`revision_type_id`) REFERENCES `car_revision_types` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `car_repairs` (`id` INTEGER, `car_id` INTEGER, `date` TEXT, `description` TEXT, `cost` REAL, FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE, PRIMARY KEY (`id`))');
         await database.execute(
@@ -879,7 +879,7 @@ class _$CarRevisionDao extends CarRevisionDao {
   final DeletionAdapter<CarRevisionType> _carRevisionTypeDeletionAdapter;
 
   @override
-  Stream<List<CarRevisionType>> findRevisionTypesByCarId(int carId) {
+  Stream<List<CarRevisionType>> streamTypesByCarId(int carId) {
     return _queryAdapter.queryListStream(
         'SELECT * FROM car_revision_types WHERE car_id = ?1',
         mapper: (Map<String, Object?> row) => CarRevisionType(
@@ -890,6 +890,22 @@ class _$CarRevisionDao extends CarRevisionDao {
             carId: row['car_id'] as int),
         arguments: [carId],
         queryableName: 'car_revision_types',
+        isView: false);
+  }
+
+  @override
+  Stream<List<CarRevision>> streamByCarId(int carId) {
+    return _queryAdapter.queryListStream(
+        'select * from car_revisions where car_id = ?1',
+        mapper: (Map<String, Object?> row) => CarRevision(
+            id: row['id'] as int?,
+            carId: row['car_id'] as int,
+            revisionTypeId: row['revision_type_id'] as int,
+            date: _dateTimeTc2.decode(row['date'] as String),
+            odometer: row['odometer'] as int,
+            notes: row['notes'] as String?),
+        arguments: [carId],
+        queryableName: 'car_revisions',
         isView: false);
   }
 

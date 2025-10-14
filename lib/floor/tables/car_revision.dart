@@ -31,22 +31,29 @@ class CarRevision {
   int? id;
 
   @ColumnInfo(name: 'car_id')
-  int? carId;
+  int carId = 0;
 
   @ColumnInfo(name: 'revision_type_id')
-  int? revisionTypeId;
+  int revisionTypeId = 0;
 
   @ColumnInfo(name: 'date')
-  DateTime? date;
+  DateTime date;
 
   @ColumnInfo(name: 'odometer')
-  int? odometer;
+  int odometer = 0;
+
+  @ColumnInfo(name: 'notes')
+  String? notes;
 
   CarRevision({
     this.id,
-    this.carId,
-    this.revisionTypeId,
-    this.date,
-    this.odometer,
+    required this.carId,
+    required this.revisionTypeId,
+    required this.date,
+    required this.odometer,
+    this.notes,
   });
+
+  CarRevision.create(this.carId):
+    date = DateTime.now();
 }

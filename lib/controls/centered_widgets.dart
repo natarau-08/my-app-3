@@ -57,6 +57,15 @@ class SimpleProgressIndicator extends StatelessWidget {
       return null;
     }
   }
+
+  static Widget? handleList(AsyncSnapshot<List<Object>> snapshot){
+    final w = handleSnapshotForLoadingOrError(snapshot);
+    if(w != null) return w;
+    if(snapshot.data!.isEmpty){
+      return const NoDataAvailableCenteredWidget();
+    }
+    return null;
+  }
 }
 
 class SimpleErrorIndicator extends StatelessWidget {

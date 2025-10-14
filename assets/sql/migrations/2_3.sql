@@ -23,6 +23,7 @@ create table car_revisions (
     revision_type_id integer not null,
     `date` text not null,
     odometer integer not null,
+    notes text,
     foreign key (car_id) references cars (id) on delete cascade,
     foreign key (revision_type_id) references car_revision_type (id) on delete cascade
 );
