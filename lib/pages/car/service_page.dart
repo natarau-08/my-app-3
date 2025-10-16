@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:my_app_3/app_secondary_page.dart';
-import 'package:my_app_3/floor/app_database.dart';
 import 'package:my_app_3/floor/tables/car.dart';
 import 'package:my_app_3/pages/car/edit_car_page.dart';
 import 'package:my_app_3/pages/car/repairs_edit.dart';
@@ -19,8 +18,6 @@ class ServicePage extends StatefulWidget {
 }
 
 class _ServicePageState extends State<ServicePage> {
-  late final _revisionTypesStream = AppDatabase.instance.carRevisionDao.streamTypesByCarId(widget.car.id!);
-
   @override
   Widget build(BuildContext context) {
     return AppSecondaryPage(
@@ -34,9 +31,9 @@ class _ServicePageState extends State<ServicePage> {
             onTap: () => _editCar(context),
           ),
           const Divider(height: 1,),
-          RevisionTypes(widget.car, _revisionTypesStream),
+          RevisionTypes(widget.car),
           const Divider(height: 1,),
-          RevisionsEdit(widget.car, _revisionTypesStream),
+          RevisionsEdit(widget.car),
           const Divider(height: 1,),
           RepairsEdit(car: widget.car),
         ],

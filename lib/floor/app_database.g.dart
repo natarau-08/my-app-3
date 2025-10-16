@@ -841,6 +841,18 @@ class _$CarRevisionDao extends CarRevisionDao {
                   'interval_months': item.intervalMonths
                 },
             changeListener),
+        _carRevisionInsertionAdapter = InsertionAdapter(
+            database,
+            'car_revisions',
+            (CarRevision item) => <String, Object?>{
+                  'id': item.id,
+                  'car_id': item.carId,
+                  'revision_type_id': item.revisionTypeId,
+                  'date': _dateTimeTc2.encode(item.date),
+                  'odometer': item.odometer,
+                  'notes': item.notes
+                },
+            changeListener),
         _carRevisionTypeUpdateAdapter = UpdateAdapter(
             database,
             'car_revision_types',
@@ -851,6 +863,19 @@ class _$CarRevisionDao extends CarRevisionDao {
                   'name': item.name,
                   'interval_km': item.intervalKm,
                   'interval_months': item.intervalMonths
+                },
+            changeListener),
+        _carRevisionUpdateAdapter = UpdateAdapter(
+            database,
+            'car_revisions',
+            ['id'],
+            (CarRevision item) => <String, Object?>{
+                  'id': item.id,
+                  'car_id': item.carId,
+                  'revision_type_id': item.revisionTypeId,
+                  'date': _dateTimeTc2.encode(item.date),
+                  'odometer': item.odometer,
+                  'notes': item.notes
                 },
             changeListener),
         _carRevisionTypeDeletionAdapter = DeletionAdapter(
@@ -864,6 +889,19 @@ class _$CarRevisionDao extends CarRevisionDao {
                   'interval_km': item.intervalKm,
                   'interval_months': item.intervalMonths
                 },
+            changeListener),
+        _carRevisionDeletionAdapter = DeletionAdapter(
+            database,
+            'car_revisions',
+            ['id'],
+            (CarRevision item) => <String, Object?>{
+                  'id': item.id,
+                  'car_id': item.carId,
+                  'revision_type_id': item.revisionTypeId,
+                  'date': _dateTimeTc2.encode(item.date),
+                  'odometer': item.odometer,
+                  'notes': item.notes
+                },
             changeListener);
 
   final sqflite.DatabaseExecutor database;
@@ -874,9 +912,15 @@ class _$CarRevisionDao extends CarRevisionDao {
 
   final InsertionAdapter<CarRevisionType> _carRevisionTypeInsertionAdapter;
 
+  final InsertionAdapter<CarRevision> _carRevisionInsertionAdapter;
+
   final UpdateAdapter<CarRevisionType> _carRevisionTypeUpdateAdapter;
 
+  final UpdateAdapter<CarRevision> _carRevisionUpdateAdapter;
+
   final DeletionAdapter<CarRevisionType> _carRevisionTypeDeletionAdapter;
+
+  final DeletionAdapter<CarRevision> _carRevisionDeletionAdapter;
 
   @override
   Stream<List<CarRevisionType>> streamTypesByCarId(int carId) {
@@ -916,14 +960,31 @@ class _$CarRevisionDao extends CarRevisionDao {
   }
 
   @override
+  Future<int> insertRevision(CarRevision revision) {
+    return _carRevisionInsertionAdapter.insertAndReturnId(
+        revision, OnConflictStrategy.abort);
+  }
+
+  @override
   Future<int> updateType(CarRevisionType type) {
     return _carRevisionTypeUpdateAdapter.updateAndReturnChangedRows(
         type, OnConflictStrategy.abort);
   }
 
   @override
+  Future<int> updateRevision(CarRevision revision) {
+    return _carRevisionUpdateAdapter.updateAndReturnChangedRows(
+        revision, OnConflictStrategy.abort);
+  }
+
+  @override
   Future<int> deleteType(CarRevisionType type) {
     return _carRevisionTypeDeletionAdapter.deleteAndReturnChangedRows(type);
+  }
+
+  @override
+  Future<int> deleteRevision(CarRevision revision) {
+    return _carRevisionDeletionAdapter.deleteAndReturnChangedRows(revision);
   }
 }
 

@@ -12,9 +12,8 @@ import 'package:my_app_3/utils.dart';
 
 class RevisionTypes extends StatefulWidget {
   final Car car;
-  final Stream<List<CarRevisionType>> stream;
 
-  const RevisionTypes(this.car, this.stream, {super.key});
+  const RevisionTypes(this.car, {super.key});
 
   @override
   State<RevisionTypes> createState() => _RevisionTypesState();
@@ -24,6 +23,7 @@ class _RevisionTypesState extends State<RevisionTypes> {
   bool _open = false;
   CarRevisionType? _editing;
   final _editFormKey = GlobalKey<FormState>();
+  late final _stream = AppDatabase.instance.carRevisionDao.streamTypesByCarId(widget.car.id!);
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +180,7 @@ class _RevisionTypesState extends State<RevisionTypes> {
             child: Column(
               children: [
                 StreamBuilder(
-                  stream: widget.stream,
+                  stream: _stream,
                   builder: (context, snapshot){
                     final w = SimpleProgressIndicator.handleSnapshotForLoadingOrError(snapshot);
                     if(w != null){

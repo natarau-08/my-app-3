@@ -18,4 +18,13 @@ abstract class CarRevisionDao {
 
   @delete
   Future<int> deleteType(CarRevisionType type);
+
+  @insert
+  Future<int> insertRevision(CarRevision revision);
+
+  @update
+  Future<int> updateRevision(CarRevision revision);
+
+  @delete
+  Future<int> deleteRevision(CarRevision revision);
 }
