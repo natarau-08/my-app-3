@@ -30,11 +30,10 @@ class ExpandingWidget extends StatelessWidget {
             ),
           ),
         ),
-
+    
         if(open)
           ...children
       ]
     );
   }
-  
 }

@@ -79,9 +79,20 @@ sealed class Utils {
     return formatter.format(dt);
   }
 
+  static String? formatDateTimeLongN(DateTime? dt){
+    if(dt == null) return null;
+    return formatDateTimeLong(dt);
+  }
+
   static String formatDate(DateTime dt){
     final formatter = DateFormat('dd/MM/yyyy');
     return formatter.format(dt);
+  }
+
+  static String? formatBigInt(int? value){
+    if(value == null) return null;
+    final formatter = NumberFormat.decimalPattern('fr_FR');
+    return formatter.format(value);
   }
 
   static DateTime addMonths(DateTime originalDate, int monthsToAdd) {

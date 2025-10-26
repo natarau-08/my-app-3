@@ -808,6 +808,32 @@ class _$CarDao extends CarDao {
   }
 
   @override
+  Future<Car?> findById(int id) async {
+    return _queryAdapter.query('SELECT * FROM cars WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => Car(
+            id: row['id'] as int?,
+            brand: row['brand'] as String,
+            model: row['model'] as String,
+            year: row['year'] as int,
+            odometer: row['odometer'] as int),
+        arguments: [id]);
+  }
+
+  @override
+  Stream<Car?> streamById(int id) {
+    return _queryAdapter.queryStream('SELECT * FROM cars WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => Car(
+            id: row['id'] as int?,
+            brand: row['brand'] as String,
+            model: row['model'] as String,
+            year: row['year'] as int,
+            odometer: row['odometer'] as int),
+        arguments: [id],
+        queryableName: 'cars',
+        isView: false);
+  }
+
+  @override
   Future<int> insertCar(Car car) {
     return _carInsertionAdapter.insertAndReturnId(
         car, OnConflictStrategy.abort);
@@ -951,6 +977,33 @@ class _$CarRevisionDao extends CarRevisionDao {
         arguments: [carId],
         queryableName: 'car_revisions',
         isView: false);
+  }
+
+  @override
+  Future<List<CarRevisionType>> getTypesByCarId(int carId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM car_revision_types WHERE car_id = ?1',
+        mapper: (Map<String, Object?> row) => CarRevisionType(
+            id: row['id'] as int?,
+            name: row['name'] as String,
+            intervalKm: row['interval_km'] as int?,
+            intervalMonths: row['interval_months'] as int?,
+            carId: row['car_id'] as int),
+        arguments: [carId]);
+  }
+
+  @override
+  Future<List<CarRevision>> getByCarId(int carId) async {
+    return _queryAdapter.queryList(
+        'select * from car_revisions where car_id = ?1',
+        mapper: (Map<String, Object?> row) => CarRevision(
+            id: row['id'] as int?,
+            carId: row['car_id'] as int,
+            revisionTypeId: row['revision_type_id'] as int,
+            date: _dateTimeTc2.decode(row['date'] as String),
+            odometer: row['odometer'] as int,
+            notes: row['notes'] as String?),
+        arguments: [carId]);
   }
 
   @override

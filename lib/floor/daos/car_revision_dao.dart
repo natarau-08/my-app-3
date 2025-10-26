@@ -10,6 +10,12 @@ abstract class CarRevisionDao {
   @Query('select * from car_revisions where car_id = :carId')
   Stream<List<CarRevision>> streamByCarId(int carId);
 
+  @Query('SELECT * FROM car_revision_types WHERE car_id = :carId')
+  Future<List<CarRevisionType>> getTypesByCarId(int carId);
+
+  @Query('select * from car_revisions where car_id = :carId')
+  Future<List<CarRevision>> getByCarId(int carId);
+
   @insert
   Future<int> insertType(CarRevisionType type);
 

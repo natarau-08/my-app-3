@@ -7,6 +7,12 @@ abstract class CarDao {
   @Query('SELECT * FROM cars')
   Stream<List<Car>> findAllCars();
 
+  @Query('SELECT * FROM cars WHERE id = :id')
+  Future<Car?> findById(int id);
+
+  @Query('SELECT * FROM cars WHERE id = :id')
+  Stream<Car?> streamById(int id);
+
   @insert
   Future<int> insertCar(Car car);
 

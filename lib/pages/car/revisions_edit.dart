@@ -12,6 +12,7 @@ import 'package:my_app_3/floor/tables/car_revision_type.dart';
 import 'package:my_app_3/model/revision_model.dart';
 import 'package:my_app_3/pages/car/expanding_widget.dart';
 import 'package:my_app_3/utils.dart';
+import 'package:rxdart/rxdart.dart';
 
 class RevisionsEdit extends StatefulWidget {
   final Car car;
@@ -65,7 +66,31 @@ class _RevisionsEditState extends State<RevisionsEdit> {
                         final rev = items[index];
                         return ListTile(
                           title: Text(rev.mame),
-                          subtitle: Text('Date: ${rev.date}'),
+                          subtitle: Wrap(
+                            children: [
+                              if(rev.notes != null) ... [
+                                Text(rev.notes!),
+                                const SizedBox(width: 16,),
+                              ],
+                              Text('Date: ${rev.date}'),
+                              const SizedBox(width: 16,),
+                              Text('Odometer: ${rev.odometer}'),
+                              if(rev.nextDate != null) ... [
+                                const SizedBox(width: 16,),
+                                Text('Next date: ${rev.nextDate}'),
+                              ],
+                              if(rev.nextOdometer != null) ... [
+                                const SizedBox(width: 16,),
+                                Text('Next odometer: ${rev.nextOdometer}'),
+                              ],
+                            ],
+                          ),
+                          trailing: rev.warningMessage == null ? null : IconButton(
+                            onPressed: (){
+                              Utils.warningMessage(rev.warningMessage!);
+                            },
+                            icon: Icon(rev.warningIcon!, color: rev.warningIcon == Icons.warning ? Colors.amber : Colors.red)
+                          ),
                           onTap: (){
                             setState(() {
                               _editing = rev.revision;
